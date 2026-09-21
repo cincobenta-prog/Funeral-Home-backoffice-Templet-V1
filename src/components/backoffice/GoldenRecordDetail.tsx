@@ -51,6 +51,7 @@ interface GoldenRecordDetailProps {
   onOpenNotifications?: () => void;
   onOpenFamilyPortal?: () => void;
   onOpenMemorialProgramModal?: () => void;
+  onOpenStorefrontModal?: () => void;
   onOpenEdrsRapidFillModal?: () => void;
   onOpenChapelQrModal?: () => void;
   onAdvancePhase?: (caseId: string, nextPhase: CasePhase) => void;
@@ -77,6 +78,7 @@ export const GoldenRecordDetail: React.FC<GoldenRecordDetailProps> = ({
   onOpenNotifications,
   onOpenFamilyPortal,
   onOpenMemorialProgramModal,
+  onOpenStorefrontModal,
   onOpenEdrsRapidFillModal,
   onOpenChapelQrModal,
   onAdvancePhase,
@@ -417,6 +419,17 @@ export const GoldenRecordDetail: React.FC<GoldenRecordDetailProps> = ({
             >
               <ScrollText className="w-3.5 h-3.5 text-purple-700" />
               <span>🖨️ 4-Panel Bulletin Studio</span>
+            </button>
+          )}
+
+          {onOpenStorefrontModal && (
+            <button
+              onClick={onOpenStorefrontModal}
+              className="bg-amber-50 hover:bg-amber-100 text-[#b45309] border border-amber-300 font-bold text-xs px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-xs"
+              title="Open Canva Digital Print Storefront (67 Governed Stationery Designs)"
+            >
+              <Printer className="w-3.5 h-3.5 text-[#b45309]" />
+              <span>🎨 Canva Print Storefront (67 Designs)</span>
             </button>
           )}
 

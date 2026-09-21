@@ -17,7 +17,9 @@ import {
   RoomId,
   DirectorProfile,
   ServiceDirectorAssignment,
-  Director1099Voucher
+  Director1099Voucher,
+  StorefrontOrder,
+  CanvaIntegrationStatus
 } from './lib/types/funeral';
 import {
   MOCK_CASES,
@@ -30,6 +32,10 @@ import {
   INITIAL_SERVICE_ASSIGNMENTS,
   INITIAL_1099_VOUCHERS
 } from './lib/data/mockCases';
+import {
+  INITIAL_STOREFRONT_ORDERS,
+  INITIAL_CANVA_INTEGRATION_STATUS
+} from './lib/data/canvaStorefrontCatalog';
 import {
   loadPersistedState,
   savePersistedState,
@@ -76,6 +82,8 @@ import { ManagerDirectorSchedulingView } from './components/backoffice/ManagerDi
 import { ManagerPinLoginModal } from './components/backoffice/ManagerPinLoginModal';
 import { DirectorAssignmentModal } from './components/backoffice/DirectorAssignmentModal';
 import { PrintableFormAP47Modal } from './components/backoffice/PrintableFormAP47Modal';
+import { PrintStorefrontManager } from './components/backoffice/PrintStorefrontManager';
+import { StorefrontOrderModal } from './components/backoffice/StorefrontOrderModal';
 
 // Family Portal Component (with full 9-Part Obituary Writer Suite)
 import { FamilyPortalView } from './components/family/FamilyPortalView';
@@ -187,6 +195,74 @@ export function App() {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState<boolean>(false);
   const [selectedAssignmentForModal, setSelectedAssignmentForModal] = useState<ServiceDirectorAssignment | null>(null);
 
+  // Digital Print Storefront & Canva Studio State
+  const [storefrontOrders, setStorefrontOrders] = useState<StorefrontOrder[]>(() => 
+    loadPersistedState<StorefrontOrder[]>(STORAGE_KEYS.STOREFRONT_ORDERS, INITIAL_STOREFRONT_ORDERS)
+  );
+  const [canvaConfig, setCanvaConfig] = useState<CanvaIntegrationStatus>(() => 
+    loadPersistedState<CanvaIntegrationStatus>(STORAGE_KEYS.CANVA_STOREFRONT_CONFIG, INITIAL_CANVA_INTEGRATION_STATUS)
+  );
+  const [isStorefrontOrderModalOpen, setIsStorefrontOrderModalOpen] = useState(false);
+  const [storefrontTargetCase, setStorefrontTargetCase] = useState<GoldenRecordCase | null>(null);
+
+  const handleOpenStorefrontOrderModal = (c?: GoldenRecordCase) => {
+    setStorefrontTargetCase(c || activeCase);
+    setIsStorefrontOrderModalOpen(true);
+  };
+
+  const handleSaveStorefrontOrder = (newOrder: StorefrontOrder) => {
+    setStorefrontOrders(prev => [newOrder, ...prev]);
+
+    // Also link to active case if matching
+    setCases(prev => prev.map(c => {
+      if (c.id === newOrder.caseId || c.caseNumber === newOrder.caseNumber) {
+        return {
+          ...c,
+          notes: [
+            ...c.notes,
+            {
+              id: `note-${Date.now()}`,
+              author: 'Canva Print Storefront',
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              text: `Stationery Order ${newOrder.orderNumber} created (${newOrder.quantity}x ${newOrder.templateTitle}). Quoted at $${newOrder.totalPrice.toFixed(2)}.`
+            }
+          ]
+        };
+      }
+      return c;
+    }));
+
+    handleSendNotification({
+      id: `notif-${Date.now()}`,
+      caseId: newOrder.caseId || activeCase.id,
+      decedentName: newOrder.caseName,
+      recipientName: 'Next-of-Kin Contact',
+      recipientPhone: '(212) 555-0199',
+      channel: 'sms',
+      type: 'storefront_proof',
+      title: `🎨 Stationery Order Created: ${newOrder.orderNumber}`,
+      bodyText: `Print order for ${newOrder.caseName} (${newOrder.quantity} units) entered into Canva studio queue.`,
+      sentAt: 'Just now',
+      status: 'delivered'
+    });
+  };
+
+  const handleSendSmsProofNotification = (order: StorefrontOrder, phone: string, recipientName: string) => {
+    handleSendNotification({
+      id: `notif-${Date.now()}`,
+      caseId: order.caseId || activeCase.id,
+      decedentName: order.caseName,
+      recipientName,
+      recipientPhone: phone,
+      channel: 'sms',
+      type: 'storefront_proof',
+      title: `📱 Digital Proof Dispatched: ${order.orderNumber}`,
+      bodyText: `Proof review link sent to ${recipientName} (${phone}) for ${order.caseName}.`,
+      sentAt: 'Just now',
+      status: 'delivered'
+    });
+  };
+
   // Automated Synchronization to LocalStorage on State Mutation
   useEffect(() => { savePersistedState(STORAGE_KEYS.CASES, cases); }, [cases]);
   useEffect(() => { savePersistedState(STORAGE_KEYS.CALENDAR_EVENTS, calendarEvents); }, [calendarEvents]);
@@ -197,6 +273,8 @@ export function App() {
   useEffect(() => { savePersistedState(STORAGE_KEYS.DIRECTOR_PROFILES, directorProfiles); }, [directorProfiles]);
   useEffect(() => { savePersistedState(STORAGE_KEYS.SERVICE_ASSIGNMENTS, serviceAssignments); }, [serviceAssignments]);
   useEffect(() => { savePersistedState(STORAGE_KEYS.VOUCHERS, vouchers); }, [vouchers]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.STOREFRONT_ORDERS, storefrontOrders); }, [storefrontOrders]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.CANVA_STOREFRONT_CONFIG, canvaConfig); }, [canvaConfig]);
 
   // Back-Office State
   const [currentRole, setCurrentRole] = useState<UserRole>('director');
@@ -657,6 +735,7 @@ export function App() {
             setIsContractModalOpen(true);
           }}
           onOpenPrintAP47={() => handleOpenPrintAP47Modal(activeCase)}
+          onOpenStorefrontModal={() => handleOpenStorefrontOrderModal(activeCase)}
           onAdvancePhase={handleUpdateCasePhase}
           onOpenTwoWaySmsModal={handleOpenTwoWaySmsModal}
         />
@@ -687,6 +766,7 @@ export function App() {
                 setIsContractModalOpen(true);
               }}
               onOpenPrintAP47={(targetCase) => handleOpenPrintAP47Modal(targetCase)}
+              onOpenStorefrontModal={(targetCase) => handleOpenStorefrontOrderModal(targetCase)}
               onOpenAppointmentModal={(targetCase) => handleOpenAppointmentModal(targetCase)}
               onOpenWebcastModal={(targetCase) => {
                 setWebcastTargetCase(targetCase);
@@ -715,6 +795,7 @@ export function App() {
                 setIsContractModalOpen(true);
               }}
               onOpenPrintAP47={(targetCase) => handleOpenPrintAP47Modal(targetCase)}
+              onOpenStorefrontModal={(targetCase) => handleOpenStorefrontOrderModal(targetCase)}
               currentRole={currentRole}
             />
           )}
@@ -736,6 +817,7 @@ export function App() {
                 setIsContractModalOpen(true);
               }}
               onOpenPrintAP47={() => handleOpenPrintAP47Modal(activeCase)}
+              onOpenStorefrontModal={() => handleOpenStorefrontOrderModal(activeCase)}
               onOpenAppointmentModal={() => handleOpenAppointmentModal(activeCase)}
               onSendNotification={handleSendNotification}
               onOpenNotifications={() => setIsNotificationHubOpen(true)}
@@ -751,6 +833,23 @@ export function App() {
               onOpenAftercare={() => setBackOfficeTab('aftercare')}
               partnerRequests={partnerRequests}
             />
+          )}
+
+          {backOfficeTab === 'storefront' && (
+            <div className="p-4 sm:p-6 bg-neutral-100 min-h-full">
+              <PrintStorefrontManager
+                cases={cases}
+                activeCase={activeCase}
+                orders={storefrontOrders}
+                onUpdateOrders={setStorefrontOrders}
+                canvaStatus={canvaConfig}
+                onUpdateCanvaStatus={setCanvaConfig}
+                onSelectCase={(c) => {
+                  setActiveCaseId(c.id);
+                }}
+                onSendSmsProofNotification={handleSendSmsProofNotification}
+              />
+            </div>
           )}
 
           {backOfficeTab === 'calendar' && (
@@ -1189,6 +1288,22 @@ export function App() {
           }}
           caseData={printAP47TargetCase || activeCase}
         />
+
+        {/* Canva Digital Print Storefront In-Case Quick Order Modal */}
+        {isStorefrontOrderModalOpen && (
+          <StorefrontOrderModal
+            caseItem={storefrontTargetCase || activeCase}
+            existingOrders={storefrontOrders}
+            onSaveOrder={handleSaveStorefrontOrder}
+            onClose={() => {
+              setIsStorefrontOrderModalOpen(false);
+              setStorefrontTargetCase(null);
+            }}
+            onOpenFullStorefront={() => {
+              setBackOfficeTab('storefront');
+            }}
+          />
+        )}
       </div>
     );
   }

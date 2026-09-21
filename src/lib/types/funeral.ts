@@ -195,6 +195,7 @@ export interface GoldenRecordCase {
   safeArrivalStatus: 'pending_removal' | 'in_transit' | 'safe_arrival_confirmed';
   safeArrivalTimestamp?: string;
   assignedDirector: string;
+  serviceDate?: string;
 
   decedent: DecedentInfo;
   informant: InformantInfo;
@@ -235,7 +236,8 @@ export type BackOfficeTab =
   | 'partners'
   | 'finances'
   | 'aftercare'
-  | 'manager';
+  | 'manager'
+  | 'storefront';
 
 export type RoomId =
   | 'chapel_1'
@@ -325,7 +327,8 @@ export type NotificationType =
   | 'payment_receipt'
   | 'custom_director_sms'
   | 'portal_update'
-  | 'partner_dispatch';
+  | 'partner_dispatch'
+  | 'storefront_proof';
 
 export interface FriendTributeShare {
   id: string;
@@ -1149,3 +1152,160 @@ export interface Director1099Voucher {
   approvedAt?: string;
   notes?: string;
 }
+
+// ==========================================
+// BFH Digital Print Storefront & Stationery Engine Types
+// ==========================================
+
+export type StorefrontProductType = 
+  | 'program' 
+  | 'prayer' 
+  | 'thanks' 
+  | 'poster' 
+  | 'bookmark' 
+  | 'dvd' 
+  | 'announcement';
+
+export interface StorefrontPreviewPage {
+  pageNumber: number;
+  pageId?: string | null;
+  imageUrl?: string;
+  label?: string;
+}
+
+export interface StorefrontDesignTemplate {
+  id: string;
+  title: string;
+  product_type: StorefrontProductType;
+  product_name: string;
+  family: string;
+  displayed_size: string;
+  width_px?: number;
+  height_px?: number;
+  page_count: number;
+  accent?: string;
+  bg?: string;
+  thumbnailUrl?: string;
+  previewPages?: StorefrontPreviewPage[];
+  catalog_status: 'draft' | 'approved' | 'retired';
+  dimension_status?: string;
+  approval_status?: string;
+  base_price: number;
+  unit_description: string;
+}
+
+export interface PhotoPlacementItem {
+  id: string;
+  sequence: number;
+  pageNumber: number;
+  placementLabel: string;
+  photoReference: string;
+  notes?: string;
+  confirmed: boolean;
+}
+
+export interface ProofVersionItem {
+  version: number;
+  artifactSha256: string;
+  placementManifestSha256: string;
+  artifactPath: string;
+  pdfUrl?: string;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  decision?: 'approved' | 'changes_requested' | 'pending';
+  comments?: string;
+  createdAt: string;
+}
+
+export interface PreflightStatus {
+  passed: boolean;
+  dpiVerified: boolean;
+  cmykColorGamut: boolean;
+  bleedMarginOk: boolean;
+  profileVersion: string;
+  acceptedBy?: string;
+  acceptedAt?: string;
+}
+
+export type PaperStockType = 
+  | '100# Gloss Cover'
+  | '80# Silk Text'
+  | '110# Heavy Linen Matte'
+  | '12pt Heavy Velvet Cardstock'
+  | '24# Bond Economy';
+
+export type FinishOptionType = 
+  | 'Bi-Fold Single Crease'
+  | 'Tri-Fold Letter'
+  | '4-Page Saddle-Stitched Booklet'
+  | '8-Page Saddle-Stitched Booklet'
+  | '12-Page Deluxe Magazine'
+  | 'Laminated Matte Edge'
+  | 'UV High Gloss Finish';
+
+export type PrintOrderStatus = 
+  | 'draft'
+  | 'intake_review'
+  | 'confirmed'
+  | 'in_production'
+  | 'proof_ready'
+  | 'changes_requested'
+  | 'approved'
+  | 'exported'
+  | 'delivered'
+  | 'rush_declined';
+
+export type TurnaroundTier = 
+  | 'Standard (48-72h)'
+  | 'Priority Rush (24h)'
+  | 'Same-Day Urgent (12h)';
+
+export interface StorefrontOrder {
+  id: string;
+  orderNumber: string;
+  caseId?: string;
+  caseNumber?: string;
+  caseName: string;
+  serviceDate?: string;
+  templateId: string;
+  templateTitle: string;
+  productType: StorefrontProductType;
+  family: string;
+  quantity: number;
+  paperStock: PaperStockType;
+  finishOption: FinishOptionType;
+  unitPrice: number;
+  totalPrice: number;
+  turnaroundTier: TurnaroundTier;
+  rushRequired: boolean;
+  rushReason?: string;
+  rushApprovedBy?: string;
+  dueAt: string;
+  status: PrintOrderStatus;
+  currentProofVersion: number;
+  proofs: ProofVersionItem[];
+  photoPlacements: PhotoPlacementItem[];
+  placementManifestSha256?: string;
+  preflight?: PreflightStatus;
+  destinationEmail?: string;
+  destinationVerified?: boolean;
+  specialInstructions?: string;
+  familyNotes?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  syncedToInvoice?: boolean;
+}
+
+export interface CanvaIntegrationStatus {
+  configured: boolean;
+  connected: boolean;
+  clientId: string;
+  scopes: string[];
+  capabilities: string[];
+  reauthorizationRequired: boolean;
+  totalTemplatesSynced: number;
+  lastSyncTimestamp: string;
+  webhookStatus: 'active' | 'inactive' | 'paused';
+}
+

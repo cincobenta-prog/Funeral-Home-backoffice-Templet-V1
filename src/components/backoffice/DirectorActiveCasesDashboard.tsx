@@ -48,6 +48,7 @@ export interface DirectorActiveCasesDashboardProps {
   onOpenRemovalModal?: (caseItem: GoldenRecordCase) => void;
   onOpenContractModal?: (caseItem: GoldenRecordCase) => void;
   onOpenPrintAP47?: (caseItem: GoldenRecordCase) => void;
+  onOpenStorefrontModal?: (caseItem?: GoldenRecordCase) => void;
   onOpenAppointmentModal?: (caseItem: GoldenRecordCase) => void;
   onOpenNewCase?: () => void;
   onOpenFamilyPortal?: (caseId?: string) => void;
@@ -86,6 +87,7 @@ export const DirectorActiveCasesDashboard: React.FC<DirectorActiveCasesDashboard
   onOpenRemovalModal,
   onOpenContractModal,
   onOpenPrintAP47,
+  onOpenStorefrontModal,
   onOpenAppointmentModal,
   onOpenNewCase,
   onOpenFamilyPortal,
@@ -1299,6 +1301,21 @@ export const DirectorActiveCasesDashboard: React.FC<DirectorActiveCasesDashboard
                         >
                           <Printer className="w-3.5 h-3.5 text-[#991b1b]" />
                           Print AP-47
+                        </button>
+                      )}
+
+                      {onOpenStorefrontModal && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectCase(c);
+                            onOpenStorefrontModal(c);
+                          }}
+                          className="bg-amber-50 hover:bg-amber-100 text-[#b45309] border border-amber-300 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 shadow-xs"
+                          title="Open Canva Digital Print Storefront & Stationery Suite (67 Designs)"
+                        >
+                          <Layers className="w-3.5 h-3.5 text-[#b45309]" />
+                          Stationery Studio
                         </button>
                       )}
                     </div>

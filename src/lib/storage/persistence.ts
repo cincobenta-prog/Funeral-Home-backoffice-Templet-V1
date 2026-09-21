@@ -17,7 +17,9 @@ export const STORAGE_KEYS = {
   MANAGER_AUTH: 'bfh_manager_auth_session',
   MANAGER_PIN: 'bfh_custom_manager_pin',
   NOTIFICATIONS: 'bfh_notifications_v3',
-  TWILIO_GATEWAY_CONFIG: 'bfh_twilio_gateway_config'
+  TWILIO_GATEWAY_CONFIG: 'bfh_twilio_gateway_config',
+  STOREFRONT_ORDERS: 'bfh_storefront_orders_v3',
+  CANVA_STOREFRONT_CONFIG: 'bfh_canva_storefront_config_v3'
 };
 
 export function loadPersistedState<T>(key: string, fallbackDefault: T): T {

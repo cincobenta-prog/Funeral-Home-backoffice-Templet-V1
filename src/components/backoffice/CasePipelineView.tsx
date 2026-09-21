@@ -19,6 +19,7 @@ interface CasePipelineViewProps {
   onOpenGoldenRecord: () => void;
   onOpenContractModal?: (caseItem: GoldenRecordCase) => void;
   onOpenPrintAP47?: (caseItem: GoldenRecordCase) => void;
+  onOpenStorefrontModal?: (caseItem: GoldenRecordCase) => void;
   currentRole: UserRole;
 }
 
@@ -30,6 +31,7 @@ export const CasePipelineView: React.FC<CasePipelineViewProps> = ({
   onOpenGoldenRecord,
   onOpenContractModal,
   onOpenPrintAP47,
+  onOpenStorefrontModal,
   currentRole
 }) => {
   const phases: Array<{ id: CasePhase; title: string; subtitle: string; color: string }> = [
@@ -236,6 +238,21 @@ export const CasePipelineView: React.FC<CasePipelineViewProps> = ({
                             >
                               <Printer className="w-3.5 h-3.5 text-[#991b1b]" />
                               <span>Print</span>
+                            </button>
+                          )}
+
+                          {onOpenStorefrontModal && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectCase(c);
+                                onOpenStorefrontModal(c);
+                              }}
+                              className="py-1.5 px-2 bg-amber-50 hover:bg-amber-100 text-[#b45309] border border-amber-300 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1 transition shrink-0"
+                              title="Canva Digital Print Storefront & Stationery Suite"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-[#b45309]" />
+                              <span>Print Suite</span>
                             </button>
                           )}
 

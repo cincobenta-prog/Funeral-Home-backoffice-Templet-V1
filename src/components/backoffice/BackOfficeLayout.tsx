@@ -29,7 +29,8 @@ import {
   ScrollText,
   UserCheck,
   Lock,
-  Printer
+  Printer,
+  Palette
 } from 'lucide-react';
 
 interface BackOfficeLayoutProps {
@@ -51,6 +52,7 @@ interface BackOfficeLayoutProps {
   onOpenRemovalModal?: () => void;
   onOpenContractModal?: () => void;
   onOpenPrintAP47?: () => void;
+  onOpenStorefrontModal?: () => void;
   onAdvancePhase?: (caseId: string, nextPhase: CasePhase) => void;
   onOpenTwoWaySmsModal?: (requestId?: string) => void;
 }
@@ -74,6 +76,7 @@ export const BackOfficeLayout: React.FC<BackOfficeLayoutProps> = ({
   onOpenRemovalModal,
   onOpenContractModal,
   onOpenPrintAP47,
+  onOpenStorefrontModal,
   onAdvancePhase,
   onOpenTwoWaySmsModal
 }) => {
@@ -110,6 +113,7 @@ export const BackOfficeLayout: React.FC<BackOfficeLayoutProps> = ({
     { id: 'manager', label: 'Director Scheduling & Roster', icon: UserCheck },
     { id: 'pipeline', label: '5-Phase Case Pipeline', icon: Layers },
     { id: 'golden_record', label: 'Golden Record Hub', icon: FileText },
+    { id: 'storefront', label: 'Print Storefront & Stationery', icon: Palette },
     { id: 'calendar', label: 'Facility & Room Calendar', icon: Calendar },
     { id: 'partners', label: 'Service Partners & SMS', icon: Users },
     { id: 'documents', label: 'Document Delivery Matrix', icon: CheckCircle2 },
@@ -239,6 +243,19 @@ export const BackOfficeLayout: React.FC<BackOfficeLayoutProps> = ({
                 <span className="hidden xl:inline">Vendor SMS</span>
               </button>
             )}
+
+            {/* Print Storefront Quick Action */}
+            <button
+              onClick={() => {
+                if (onOpenStorefrontModal) onOpenStorefrontModal();
+                else onChangeTab('storefront');
+              }}
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-amber-300 border border-amber-400/40 rounded-xl text-xs font-bold transition shadow-2xs group"
+              title="Open BFH Digital Print Storefront & Canva Studio"
+            >
+              <Palette className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
+              <span className="hidden xl:inline">Print Storefront</span>
+            </button>
 
             {/* Print Form AP-47 Quick Action */}
             {onOpenPrintAP47 && (
