@@ -29,7 +29,8 @@ import {
   ScrollText,
   Users,
   Calendar,
-  CalendarCheck
+  CalendarCheck,
+  Printer
 } from 'lucide-react';
 import { WebcastSchedulingModal } from './WebcastSchedulingModal';
 import { CaseFlightChecklist } from './CaseFlightChecklist';
@@ -44,6 +45,7 @@ interface GoldenRecordDetailProps {
   onOpenDocuments: () => void;
   onOpenRemovalModal?: () => void;
   onOpenContractModal?: () => void;
+  onOpenPrintAP47?: () => void;
   onOpenAppointmentModal?: () => void;
   onSendNotification?: (notif: SimulatedNotification) => void;
   onOpenNotifications?: () => void;
@@ -69,6 +71,7 @@ export const GoldenRecordDetail: React.FC<GoldenRecordDetailProps> = ({
   onOpenDocuments,
   onOpenRemovalModal,
   onOpenContractModal,
+  onOpenPrintAP47,
   onOpenAppointmentModal,
   onSendNotification,
   onOpenNotifications,
@@ -107,6 +110,9 @@ export const GoldenRecordDetail: React.FC<GoldenRecordDetailProps> = ({
         break;
       case 'open_contract':
         onOpenContractModal?.();
+        break;
+      case 'open_print_ap47':
+        onOpenPrintAP47 ? onOpenPrintAP47() : onOpenContractModal?.();
         break;
       case 'open_calendar':
         onOpenCalendar?.();
@@ -389,6 +395,17 @@ export const GoldenRecordDetail: React.FC<GoldenRecordDetailProps> = ({
             >
               <ScrollText className="w-3.5 h-3.5 text-emerald-700" />
               <span>📜 AP-47 Contract Studio</span>
+            </button>
+          )}
+
+          {onOpenPrintAP47 && (
+            <button
+              onClick={onOpenPrintAP47}
+              className="bg-[#991b1b] hover:bg-red-800 text-white border border-amber-300/60 font-bold text-xs px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-xs"
+              title="Print Official Form AP-47 Statement of Goods & Services (10 NYCRR § 77.8)"
+            >
+              <Printer className="w-3.5 h-3.5 text-amber-300" />
+              <span>🖨️ Print Form AP-47</span>
             </button>
           )}
 

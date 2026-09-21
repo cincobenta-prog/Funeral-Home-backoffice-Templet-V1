@@ -7,7 +7,8 @@ import {
   FileText, 
   MapPin, 
   ShieldCheck,
-  ScrollText
+  ScrollText,
+  Printer
 } from 'lucide-react';
 
 interface CasePipelineViewProps {
@@ -17,6 +18,7 @@ interface CasePipelineViewProps {
   onUpdateCasePhase: (caseId: string, newPhase: CasePhase) => void;
   onOpenGoldenRecord: () => void;
   onOpenContractModal?: (caseItem: GoldenRecordCase) => void;
+  onOpenPrintAP47?: (caseItem: GoldenRecordCase) => void;
   currentRole: UserRole;
 }
 
@@ -27,6 +29,7 @@ export const CasePipelineView: React.FC<CasePipelineViewProps> = ({
   onUpdateCasePhase,
   onOpenGoldenRecord,
   onOpenContractModal,
+  onOpenPrintAP47,
   currentRole
 }) => {
   const phases: Array<{ id: CasePhase; title: string; subtitle: string; color: string }> = [
@@ -218,6 +221,21 @@ export const CasePipelineView: React.FC<CasePipelineViewProps> = ({
                             >
                               <ScrollText className="w-3.5 h-3.5 text-emerald-700" />
                               <span>AP-47</span>
+                            </button>
+                          )}
+
+                          {onOpenPrintAP47 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectCase(c);
+                                onOpenPrintAP47(c);
+                              }}
+                              className="py-1.5 px-2 bg-red-50 hover:bg-red-100 text-[#991b1b] border border-red-300 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1 transition shrink-0"
+                              title="Print Official Form AP-47 Statement (10 NYCRR § 77.8)"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-[#991b1b]" />
+                              <span>Print</span>
                             </button>
                           )}
 

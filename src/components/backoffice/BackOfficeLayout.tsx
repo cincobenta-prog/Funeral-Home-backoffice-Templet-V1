@@ -28,7 +28,8 @@ import {
   LayoutDashboard,
   ScrollText,
   UserCheck,
-  Lock
+  Lock,
+  Printer
 } from 'lucide-react';
 
 interface BackOfficeLayoutProps {
@@ -49,6 +50,7 @@ interface BackOfficeLayoutProps {
   onOpenPartnerModal?: () => void;
   onOpenRemovalModal?: () => void;
   onOpenContractModal?: () => void;
+  onOpenPrintAP47?: () => void;
   onAdvancePhase?: (caseId: string, nextPhase: CasePhase) => void;
   onOpenTwoWaySmsModal?: (requestId?: string) => void;
 }
@@ -71,6 +73,7 @@ export const BackOfficeLayout: React.FC<BackOfficeLayoutProps> = ({
   onOpenPartnerModal,
   onOpenRemovalModal,
   onOpenContractModal,
+  onOpenPrintAP47,
   onAdvancePhase,
   onOpenTwoWaySmsModal
 }) => {
@@ -234,6 +237,18 @@ export const BackOfficeLayout: React.FC<BackOfficeLayoutProps> = ({
               >
                 <Users className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
                 <span className="hidden xl:inline">Vendor SMS</span>
+              </button>
+            )}
+
+            {/* Print Form AP-47 Quick Action */}
+            {onOpenPrintAP47 && (
+              <button
+                onClick={onOpenPrintAP47}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#991b1b] hover:bg-red-800 text-white border border-amber-300/40 rounded-xl text-xs font-bold transition shadow-2xs group"
+                title="Print Official Form AP-47 Statement of Goods & Services (10 NYCRR § 77.8)"
+              >
+                <Printer className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
+                <span className="hidden xl:inline">Print AP-47</span>
               </button>
             )}
 
@@ -439,6 +454,16 @@ export const BackOfficeLayout: React.FC<BackOfficeLayoutProps> = ({
                     >
                       <ScrollText className="w-3.5 h-3.5 text-amber-300" />
                       <span>📜 Open AP-47 Arrangement Studio</span>
+                    </button>
+                  )}
+                  {onOpenPrintAP47 && (
+                    <button
+                      onClick={onOpenPrintAP47}
+                      className="px-3.5 py-1.5 bg-red-950 hover:bg-red-900 text-amber-300 font-bold rounded-lg text-xs transition shadow-md flex items-center gap-1.5 border border-amber-400/60"
+                      title="Print Official Form AP-47 Contract (10 NYCRR § 77.8)"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-300" />
+                      <span>🖨️ Print Form AP-47</span>
                     </button>
                   )}
                   <button

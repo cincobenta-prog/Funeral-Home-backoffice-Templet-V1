@@ -20,7 +20,12 @@ import {
   Church,
   Music,
   CheckCheck,
-  ShieldCheck
+  ShieldCheck,
+  Code,
+  Copy,
+  Check,
+  Activity,
+  Server
 } from 'lucide-react';
 
 interface TwoWayVendorSmsModalProps {
@@ -53,11 +58,13 @@ export const TwoWayVendorSmsModal: React.FC<TwoWayVendorSmsModalProps> = ({
     : caseRequests[0] || requests[0];
 
   const [selectedRequestId, setSelectedRequestId] = useState<string>(initialReq?.id || '');
+  const [activeModalTab, setActiveModalTab] = useState<'simulator' | 'webhook'>('simulator');
   const [vendorCustomReplyText, setVendorCustomReplyText] = useState('');
   const [directorOutboundDraft, setDirectorOutboundDraft] = useState('');
   const [adjustedTimeInput, setAdjustedTimeInput] = useState('10:15 AM');
   const [showAdjustTimeModal, setShowAdjustTimeModal] = useState(false);
   const [toastFeedback, setToastFeedback] = useState<string | null>(null);
+  const [copiedPayload, setCopiedPayload] = useState(false);
 
   if (!isOpen) return null;
 
@@ -265,6 +272,43 @@ export const TwoWayVendorSmsModal: React.FC<TwoWayVendorSmsModalProps> = ({
 
         </div>
 
+        {/* Sub Navigation Bar: Carrier Simulator vs Twilio Webhook Inspector */}
+        <div className="bg-neutral-900 px-4 sm:px-5 py-2.5 flex items-center justify-between border-b border-neutral-800 text-xs shrink-0">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setActiveModalTab('simulator')}
+              className={`px-3 py-1.5 rounded-xl font-bold flex items-center space-x-1.5 transition ${
+                activeModalTab === 'simulator'
+                  ? 'bg-amber-400 text-neutral-950 shadow-sm'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>2-Way Carrier Simulator</span>
+            </button>
+            <button
+              onClick={() => setActiveModalTab('webhook')}
+              className={`px-3 py-1.5 rounded-xl font-bold flex items-center space-x-1.5 transition ${
+                activeModalTab === 'webhook'
+                  ? 'bg-amber-400 text-neutral-950 shadow-sm'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+              }`}
+            >
+              <Code className="w-3.5 h-3.5" />
+              <span>Twilio / Gateway Webhook Inspector</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+            </button>
+          </div>
+          <div className="hidden sm:flex items-center space-x-3 text-[11px] text-neutral-400 font-mono">
+            <span className="flex items-center gap-1">
+              <Server className="w-3 h-3 text-emerald-400" />
+              <span>Twilio API v2010-04-01</span>
+            </span>
+            <span>•</span>
+            <span className="text-emerald-400">HMAC-SHA1: Verified</span>
+          </div>
+        </div>
+
         {/* Toast Notification Banner */}
         {toastFeedback && (
           <div className="bg-emerald-600 text-white px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-inner animate-fadeIn">
@@ -278,7 +322,135 @@ export const TwoWayVendorSmsModal: React.FC<TwoWayVendorSmsModalProps> = ({
           </div>
         )}
 
-        {/* Modal Body: 2-Column Split Console */}
+        {/* Modal Body: Active Tab View */}
+        {activeModalTab === 'webhook' ? (
+          <div className="p-6 overflow-y-auto space-y-6 bg-neutral-950 text-neutral-100 flex-1 font-mono text-xs">
+            
+            {/* Twilio Endpoint Overview Banner */}
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px] font-bold border border-emerald-500/30">
+                    STATUS 200 OK
+                  </span>
+                  <span className="text-sm font-bold text-white">Twilio REST API Gateway & Webhook Pipeline</span>
+                </div>
+                <p className="text-neutral-400 text-xs mt-1 font-sans">
+                  Bi-directional carrier routing between Benta's Funeral Home (212-281-8850) and {currentRequest?.partnerName} ({currentRequest?.partnerPhone}).
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 font-sans">
+                <button
+                  onClick={() => {
+                    const lastMsg = currentRequest?.threadMessages && currentRequest.threadMessages.length > 0
+                      ? currentRequest.threadMessages[currentRequest.threadMessages.length - 1].body
+                      : "YES, CONFIRMED";
+                    const sampleWebhook = JSON.stringify({
+                      event: "sms.inbound_received",
+                      AccountSid: "ACbfh9828472918402948201948201948",
+                      MessageSid: `SM${Date.now().toString(36)}`,
+                      From: currentRequest?.partnerPhone,
+                      To: "+12122818850",
+                      Body: lastMsg,
+                      Carrier: "Verizon Wireless (NYC)",
+                      SignatureValid: true
+                    }, null, 2);
+                    navigator.clipboard.writeText(sampleWebhook);
+                    setCopiedPayload(true);
+                    setTimeout(() => setCopiedPayload(false), 2000);
+                  }}
+                  className="px-3.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 border border-neutral-700"
+                >
+                  {copiedPayload ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-amber-300" />}
+                  <span>{copiedPayload ? 'Copied JSON!' : 'Copy Twilio Payload'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Carrier Telemetry Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
+                <span className="text-[10px] text-neutral-400 block font-sans">Primary Carrier</span>
+                <span className="text-amber-300 font-bold text-sm">Verizon NYC 5G</span>
+                <span className="text-[10px] text-emerald-400 block mt-0.5">Latency: 114ms</span>
+              </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
+                <span className="text-[10px] text-neutral-400 block font-sans">Security Signature</span>
+                <span className="text-emerald-400 font-bold text-sm">HMAC-SHA1 OK</span>
+                <span className="text-[10px] text-neutral-400 block mt-0.5">X-Twilio-Signature verified</span>
+              </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
+                <span className="text-[10px] text-neutral-400 block font-sans">A2P 10DLC Campaign</span>
+                <span className="text-blue-400 font-bold text-sm">Registered 10DLC</span>
+                <span className="text-[10px] text-neutral-400 block mt-0.5">Trust Score: 98/100</span>
+              </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
+                <span className="text-[10px] text-neutral-400 block font-sans">Delivery Rate</span>
+                <span className="text-purple-400 font-bold text-sm">100% Confirmed</span>
+                <span className="text-[10px] text-neutral-400 block mt-0.5">0 Failed / 0 Filtered</span>
+              </div>
+            </div>
+
+            {/* Inbound & Outbound Payload Inspectors */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              
+              {/* Outbound Dispatch Payload */}
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-2.5">
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+                  <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Outbound REST Dispatch Payload (POST)</span>
+                  </span>
+                  <span className="text-[10px] text-neutral-500">api.twilio.com/2010-04-01</span>
+                </div>
+                <div className="bg-black/60 rounded-xl p-3 text-[11px] overflow-x-auto text-neutral-300 leading-relaxed font-mono">
+                  <span className="text-neutral-500">// BFH Dispatch Outbound Message</span><br />
+                  POST /2010-04-01/Accounts/ACbfh9828472918402948201948201948/Messages.json HTTP/1.1<br />
+                  Host: api.twilio.com<br />
+                  Authorization: Basic QUNiZmg5ODI4NDcyOTE4NDAyOTQ4MjAxOTQ4MjAxOTQ4OnNlY3JldF9hdXRoX3Rva2Vu<br />
+                  Content-Type: application/x-www-form-urlencoded<br /><br />
+                  From=%2B12122818850<br />
+                  &To={encodeURIComponent(currentRequest?.partnerPhone || '+12125550198')}<br />
+                  &Body={encodeURIComponent(currentRequest?.smsMessageDraft || 'BFH SERVICE REQUEST')}<br />
+                  &StatusCallback=https%3A%2F%2Fapi.e-bfh.com%2Fapi%2Fv1%2Fwebhooks%2Ftwilio%2Fsms-status
+                </div>
+              </div>
+
+              {/* Inbound Webhook Callback Payload */}
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-2.5">
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+                  <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>Inbound Carrier Webhook Event (POST)</span>
+                  </span>
+                  <span className="text-[10px] text-neutral-500">api.e-bfh.com/webhooks/twilio</span>
+                </div>
+                <div className="bg-black/60 rounded-xl p-3 text-[11px] overflow-x-auto text-neutral-300 leading-relaxed font-mono">
+                  <span className="text-neutral-500">// Received from Twilio Carrier Webhook</span><br />
+                  POST /api/v1/webhooks/twilio/sms-inbound HTTP/1.1<br />
+                  Host: api.e-bfh.com<br />
+                  X-Twilio-Signature: 8xKj3290FnLq194zKla0Pz92837482==<br />
+                  User-Agent: TwilioProxy/1.1<br /><br />
+                  &#123;<br />
+                  &nbsp;&nbsp;"MessageSid": "SM{currentRequest?.id.replace(/[^a-zA-Z0-9]/g, '') || '82947291'}",<br />
+                  &nbsp;&nbsp;"AccountSid": "ACbfh9828472918402948201948201948",<br />
+                  &nbsp;&nbsp;"From": "{currentRequest?.partnerPhone}",<br />
+                  &nbsp;&nbsp;"To": "+12122818850",<br />
+                  &nbsp;&nbsp;"Body": "{currentRequest?.threadMessages && currentRequest.threadMessages.length > 0 ? currentRequest.threadMessages[currentRequest.threadMessages.length - 1].body : 'YES, CONFIRMED'}",<br />
+                  &nbsp;&nbsp;"NumMedia": "0",<br />
+                  &nbsp;&nbsp;"FromCity": "NEW YORK",<br />
+                  &nbsp;&nbsp;"FromState": "NY",<br />
+                  &nbsp;&nbsp;"FromZip": "10030"<br />
+                  &#125;
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        ) : (
+        /* Modal Body: 2-Column Split Console */
         <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 overflow-y-auto">
           
           {/* Left Column (5 cols): BFH Dispatch Control Panel */}
@@ -565,6 +737,7 @@ export const TwoWayVendorSmsModal: React.FC<TwoWayVendorSmsModalProps> = ({
           </div>
 
         </div>
+        )}
 
       </div>
     </div>

@@ -497,6 +497,7 @@ export type FlightChecklistActionType =
   | 'open_removal'
   | 'open_appointment'
   | 'open_contract'
+  | 'open_print_ap47'
   | 'open_calendar'
   | 'open_edrs'
   | 'open_esign'

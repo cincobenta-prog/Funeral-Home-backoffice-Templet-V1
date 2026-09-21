@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   UserRole,
   GoldenRecordCase,
@@ -30,6 +30,11 @@ import {
   INITIAL_SERVICE_ASSIGNMENTS,
   INITIAL_1099_VOUCHERS
 } from './lib/data/mockCases';
+import {
+  loadPersistedState,
+  savePersistedState,
+  STORAGE_KEYS
+} from './lib/storage/persistence';
 
 // Public Components
 import { PublicNavbar } from './components/public/PublicNavbar';
@@ -70,6 +75,7 @@ import { FamilyAccessModal } from './components/public/FamilyAccessModal';
 import { ManagerDirectorSchedulingView } from './components/backoffice/ManagerDirectorSchedulingView';
 import { ManagerPinLoginModal } from './components/backoffice/ManagerPinLoginModal';
 import { DirectorAssignmentModal } from './components/backoffice/DirectorAssignmentModal';
+import { PrintableFormAP47Modal } from './components/backoffice/PrintableFormAP47Modal';
 
 // Family Portal Component (with full 9-Part Obituary Writer Suite)
 import { FamilyPortalView } from './components/family/FamilyPortalView';
@@ -83,20 +89,33 @@ export function App() {
   const [isStaffUser, setIsStaffUser] = useState<boolean>(true);
   const [isFamilyAccessModalOpen, setIsFamilyAccessModalOpen] = useState<boolean>(false);
 
-  // Case State
-  const [cases, setCases] = useState<GoldenRecordCase[]>(MOCK_CASES);
-  const [activeCaseId, setActiveCaseId] = useState<string>(MOCK_CASES[0].id);
+  // Case State with Persistent Local Storage Hydration
+  const [cases, setCases] = useState<GoldenRecordCase[]>(() => 
+    loadPersistedState<GoldenRecordCase[]>(STORAGE_KEYS.CASES, MOCK_CASES)
+  );
+  const [activeCaseId, setActiveCaseId] = useState<string>(() => {
+    const loaded = loadPersistedState<GoldenRecordCase[]>(STORAGE_KEYS.CASES, MOCK_CASES);
+    return loaded[0]?.id || MOCK_CASES[0].id;
+  });
 
   // Facility Calendar Events State
-  const [calendarEvents, setCalendarEvents] = useState<RoomScheduleEvent[]>(INITIAL_CALENDAR_EVENTS);
+  const [calendarEvents, setCalendarEvents] = useState<RoomScheduleEvent[]>(() => 
+    loadPersistedState<RoomScheduleEvent[]>(STORAGE_KEYS.CALENDAR_EVENTS, INITIAL_CALENDAR_EVENTS)
+  );
 
   // Livery Vehicle Holds State
-  const [liveryHolds, setLiveryHolds] = useState<VehicleHoldRequest[]>(INITIAL_LIVERY_HOLDS);
+  const [liveryHolds, setLiveryHolds] = useState<VehicleHoldRequest[]>(() => 
+    loadPersistedState<VehicleHoldRequest[]>(STORAGE_KEYS.LIVERY_HOLDS, INITIAL_LIVERY_HOLDS)
+  );
   const [isLiveryModalOpen, setIsLiveryModalOpen] = useState(false);
 
   // Service Partners & SMS Dispatch State
-  const [servicePartners, setServicePartners] = useState<ServicePartnerContact[]>(INITIAL_SERVICE_PARTNERS);
-  const [partnerRequests, setPartnerRequests] = useState<PartnerScheduleRequest[]>(INITIAL_PARTNER_REQUESTS);
+  const [servicePartners, setServicePartners] = useState<ServicePartnerContact[]>(() => 
+    loadPersistedState<ServicePartnerContact[]>(STORAGE_KEYS.SERVICE_PARTNERS, INITIAL_SERVICE_PARTNERS)
+  );
+  const [partnerRequests, setPartnerRequests] = useState<PartnerScheduleRequest[]>(() => 
+    loadPersistedState<PartnerScheduleRequest[]>(STORAGE_KEYS.PARTNER_REQUESTS, INITIAL_PARTNER_REQUESTS)
+  );
   const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
 
   // Two-Way Vendor SMS Dispatch & Confirmation Modal State
@@ -129,6 +148,15 @@ export function App() {
     setIsAppointmentModalOpen(true);
   };
 
+  // NYS Form AP-47 Official Printable Contract State
+  const [isPrintAP47Open, setIsPrintAP47Open] = useState(false);
+  const [printAP47TargetCase, setPrintAP47TargetCase] = useState<GoldenRecordCase | null>(null);
+
+  const handleOpenPrintAP47Modal = (c?: GoldenRecordCase) => {
+    setPrintAP47TargetCase(c || activeCase);
+    setIsPrintAP47Open(true);
+  };
+
   // 4-Panel Memorial Program Builder State
   const [isMemorialProgramModalOpen, setIsMemorialProgramModalOpen] = useState(false);
 
@@ -139,17 +167,36 @@ export function App() {
   const [isChapelQrModalOpen, setIsChapelQrModalOpen] = useState(false);
 
   // Notifications State
-  const [notifications, setNotifications] = useState<SimulatedNotification[]>(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<SimulatedNotification[]>(() => 
+    loadPersistedState<SimulatedNotification[]>(STORAGE_KEYS.NOTIFICATIONS, INITIAL_NOTIFICATIONS)
+  );
   const [isNotificationHubOpen, setIsNotificationHubOpen] = useState(false);
 
   // Executive Manager Suite & Director Scheduling State
   const [isManagerAuthenticated, setIsManagerAuthenticated] = useState<boolean>(false);
   const [isManagerPinModalOpen, setIsManagerPinModalOpen] = useState<boolean>(false);
-  const [directorProfiles, setDirectorProfiles] = useState<DirectorProfile[]>(INITIAL_DIRECTOR_PROFILES);
-  const [serviceAssignments, setServiceAssignments] = useState<ServiceDirectorAssignment[]>(INITIAL_SERVICE_ASSIGNMENTS);
-  const [vouchers, setVouchers] = useState<Director1099Voucher[]>(INITIAL_1099_VOUCHERS);
+  const [directorProfiles, setDirectorProfiles] = useState<DirectorProfile[]>(() => 
+    loadPersistedState<DirectorProfile[]>(STORAGE_KEYS.DIRECTOR_PROFILES, INITIAL_DIRECTOR_PROFILES)
+  );
+  const [serviceAssignments, setServiceAssignments] = useState<ServiceDirectorAssignment[]>(() => 
+    loadPersistedState<ServiceDirectorAssignment[]>(STORAGE_KEYS.SERVICE_ASSIGNMENTS, INITIAL_SERVICE_ASSIGNMENTS)
+  );
+  const [vouchers, setVouchers] = useState<Director1099Voucher[]>(() => 
+    loadPersistedState<Director1099Voucher[]>(STORAGE_KEYS.VOUCHERS, INITIAL_1099_VOUCHERS)
+  );
   const [isAssignModalOpen, setIsAssignModalOpen] = useState<boolean>(false);
   const [selectedAssignmentForModal, setSelectedAssignmentForModal] = useState<ServiceDirectorAssignment | null>(null);
+
+  // Automated Synchronization to LocalStorage on State Mutation
+  useEffect(() => { savePersistedState(STORAGE_KEYS.CASES, cases); }, [cases]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.CALENDAR_EVENTS, calendarEvents); }, [calendarEvents]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.LIVERY_HOLDS, liveryHolds); }, [liveryHolds]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.SERVICE_PARTNERS, servicePartners); }, [servicePartners]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.PARTNER_REQUESTS, partnerRequests); }, [partnerRequests]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.NOTIFICATIONS, notifications); }, [notifications]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.DIRECTOR_PROFILES, directorProfiles); }, [directorProfiles]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.SERVICE_ASSIGNMENTS, serviceAssignments); }, [serviceAssignments]);
+  useEffect(() => { savePersistedState(STORAGE_KEYS.VOUCHERS, vouchers); }, [vouchers]);
 
   // Back-Office State
   const [currentRole, setCurrentRole] = useState<UserRole>('director');
@@ -609,6 +656,7 @@ export function App() {
             setContractTargetCase(activeCase);
             setIsContractModalOpen(true);
           }}
+          onOpenPrintAP47={() => handleOpenPrintAP47Modal(activeCase)}
           onAdvancePhase={handleUpdateCasePhase}
           onOpenTwoWaySmsModal={handleOpenTwoWaySmsModal}
         />
@@ -638,6 +686,7 @@ export function App() {
                 setContractTargetCase(targetCase);
                 setIsContractModalOpen(true);
               }}
+              onOpenPrintAP47={(targetCase) => handleOpenPrintAP47Modal(targetCase)}
               onOpenAppointmentModal={(targetCase) => handleOpenAppointmentModal(targetCase)}
               onOpenWebcastModal={(targetCase) => {
                 setWebcastTargetCase(targetCase);
@@ -665,6 +714,7 @@ export function App() {
                 setContractTargetCase(targetCase);
                 setIsContractModalOpen(true);
               }}
+              onOpenPrintAP47={(targetCase) => handleOpenPrintAP47Modal(targetCase)}
               currentRole={currentRole}
             />
           )}
@@ -685,6 +735,7 @@ export function App() {
                 setContractTargetCase(activeCase);
                 setIsContractModalOpen(true);
               }}
+              onOpenPrintAP47={() => handleOpenPrintAP47Modal(activeCase)}
               onOpenAppointmentModal={() => handleOpenAppointmentModal(activeCase)}
               onSendNotification={handleSendNotification}
               onOpenNotifications={() => setIsNotificationHubOpen(true)}
@@ -1127,6 +1178,16 @@ export function App() {
               status: 'delivered'
             });
           }}
+        />
+
+        {/* Printable NYS Form AP-47 Official Statement of Goods & Services Modal */}
+        <PrintableFormAP47Modal
+          isOpen={isPrintAP47Open}
+          onClose={() => {
+            setIsPrintAP47Open(false);
+            setPrintAP47TargetCase(null);
+          }}
+          caseData={printAP47TargetCase || activeCase}
         />
       </div>
     );

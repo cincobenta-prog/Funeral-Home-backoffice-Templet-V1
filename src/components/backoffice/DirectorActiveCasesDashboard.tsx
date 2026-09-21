@@ -31,7 +31,8 @@ import {
   Truck,
   ScrollText,
   CalendarCheck,
-  UserCheck
+  UserCheck,
+  Printer
 } from 'lucide-react';
 
 export interface DirectorActiveCasesDashboardProps {
@@ -46,6 +47,7 @@ export interface DirectorActiveCasesDashboardProps {
   onOpenWebcastModal?: (caseItem: GoldenRecordCase) => void;
   onOpenRemovalModal?: (caseItem: GoldenRecordCase) => void;
   onOpenContractModal?: (caseItem: GoldenRecordCase) => void;
+  onOpenPrintAP47?: (caseItem: GoldenRecordCase) => void;
   onOpenAppointmentModal?: (caseItem: GoldenRecordCase) => void;
   onOpenNewCase?: () => void;
   onOpenFamilyPortal?: (caseId?: string) => void;
@@ -83,6 +85,7 @@ export const DirectorActiveCasesDashboard: React.FC<DirectorActiveCasesDashboard
   onOpenWebcastModal,
   onOpenRemovalModal,
   onOpenContractModal,
+  onOpenPrintAP47,
   onOpenAppointmentModal,
   onOpenNewCase,
   onOpenFamilyPortal,
@@ -1283,6 +1286,21 @@ export const DirectorActiveCasesDashboard: React.FC<DirectorActiveCasesDashboard
                           AP-47 Contract
                         </button>
                       )}
+
+                      {onOpenPrintAP47 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectCase(c);
+                            onOpenPrintAP47(c);
+                          }}
+                          className="bg-red-50 hover:bg-red-100 text-[#991b1b] border border-red-300 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 shadow-xs"
+                          title="Print Official Form AP-47 Statement of Goods & Services (10 NYCRR § 77.8)"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-[#991b1b]" />
+                          Print AP-47
+                        </button>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -1488,6 +1506,20 @@ export const DirectorActiveCasesDashboard: React.FC<DirectorActiveCasesDashboard
                               >
                                 <ScrollText className="w-3.5 h-3.5 text-emerald-700" />
                                 <span>AP-47</span>
+                              </button>
+                            )}
+                            {onOpenPrintAP47 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSelectCase(c);
+                                  onOpenPrintAP47(c);
+                                }}
+                                className="bg-red-50 hover:bg-red-100 text-[#991b1b] border border-red-200 text-xs font-semibold px-2 py-1.5 rounded transition flex items-center gap-1"
+                                title="Print Official Form AP-47 Statement (10 NYCRR § 77.8)"
+                              >
+                                <Printer className="w-3.5 h-3.5 text-[#991b1b]" />
+                                <span>Print</span>
                               </button>
                             )}
                             <button
