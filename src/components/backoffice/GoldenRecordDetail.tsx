@@ -414,11 +414,11 @@ export const GoldenRecordDetail: React.FC<GoldenRecordDetailProps> = ({
           {onOpenMemorialProgramModal && (
             <button
               onClick={onOpenMemorialProgramModal}
-              className="bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 font-bold text-xs px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-xs"
-              title="Print 4-Panel Memorial Service Program (8.5x11 Bifold)"
+              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 font-bold text-xs px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-xs"
+              title="Open BFH In-House Design & Print Studio (Booklets, Prayer Cards, Posters, Bookmarks)"
             >
-              <ScrollText className="w-3.5 h-3.5 text-purple-700" />
-              <span>🖨️ 4-Panel Bulletin Studio</span>
+              <ScrollText className="w-3.5 h-3.5 text-emerald-700" />
+              <span>🎨 BFH In-House Print Studio (All Products)</span>
             </button>
           )}
 
@@ -426,10 +426,10 @@ export const GoldenRecordDetail: React.FC<GoldenRecordDetailProps> = ({
             <button
               onClick={onOpenStorefrontModal}
               className="bg-amber-50 hover:bg-amber-100 text-[#b45309] border border-amber-300 font-bold text-xs px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-xs"
-              title="Open Canva Digital Print Storefront (67 Governed Stationery Designs)"
+              title="Stationery Order & Invoice Sync"
             >
               <Printer className="w-3.5 h-3.5 text-[#b45309]" />
-              <span>🎨 Canva Print Storefront (67 Designs)</span>
+              <span>📋 Stationery Order & Invoice</span>
             </button>
           )}
 

@@ -19,6 +19,7 @@ import {
   ServiceDirectorAssignment,
   Director1099Voucher,
   StorefrontOrder,
+  StorefrontProductType,
   CanvaIntegrationStatus
 } from './lib/types/funeral';
 import {
@@ -73,7 +74,7 @@ import { WebcastSchedulingModal } from './components/backoffice/WebcastSchedulin
 import { RemovalSchedulingModal } from './components/backoffice/RemovalSchedulingModal';
 import { ArrangementContractBuilderModal } from './components/backoffice/ArrangementContractBuilderModal';
 import { ArrangementAppointmentModal } from './components/backoffice/ArrangementAppointmentModal';
-import { MemorialProgramBuilderModal } from './components/backoffice/MemorialProgramBuilderModal';
+import { MemorialProgramBuilderModal, InHouseThemeType } from './components/backoffice/MemorialProgramBuilderModal';
 import { EdrsRapidFillModal } from './components/backoffice/EdrsRapidFillModal';
 import { ChapelQrSignModal } from './components/backoffice/ChapelQrSignModal';
 import { TwoWayVendorSmsModal } from './components/backoffice/TwoWayVendorSmsModal';
@@ -165,8 +166,31 @@ export function App() {
     setIsPrintAP47Open(true);
   };
 
-  // 4-Panel Memorial Program Builder State
+  // In-House Memorial Stationery Design & Print Studio State
   const [isMemorialProgramModalOpen, setIsMemorialProgramModalOpen] = useState(false);
+  const [memorialProgramProduct, setMemorialProgramProduct] = useState<StorefrontProductType>('program');
+  const [memorialProgramTheme, setMemorialProgramTheme] = useState<InHouseThemeType>('harlem_heritage');
+  const [memorialProgramTargetCase, setMemorialProgramTargetCase] = useState<GoldenRecordCase | null>(null);
+
+  const handleOpenInHouseStudio = (template?: any, targetCase?: GoldenRecordCase) => {
+    if (targetCase) {
+      setMemorialProgramTargetCase(targetCase);
+    } else {
+      setMemorialProgramTargetCase(activeCase);
+    }
+
+    if (template) {
+      if (template.product_type) setMemorialProgramProduct(template.product_type);
+      const fam = (template.family || '').toLowerCase();
+      if (fam.includes('cathedral') || fam.includes('stained')) setMemorialProgramTheme('cathedral_stained');
+      else if (fam.includes('royal') || fam.includes('purple')) setMemorialProgramTheme('royal_purple');
+      else if (fam.includes('blossom') || fam.includes('rose') || fam.includes('serenity')) setMemorialProgramTheme('cherry_blossom');
+      else if (fam.includes('ebony') || fam.includes('minimal')) setMemorialProgramTheme('ebony_luxe');
+      else if (fam.includes('african') || fam.includes('kente')) setMemorialProgramTheme('african_kente');
+      else setMemorialProgramTheme('harlem_heritage');
+    }
+    setIsMemorialProgramModalOpen(true);
+  };
 
   // NYS EDRS & NYC eVital Assistant State
   const [isEdrsModalOpen, setIsEdrsModalOpen] = useState(false);
@@ -848,6 +872,7 @@ export function App() {
                   setActiveCaseId(c.id);
                 }}
                 onSendSmsProofNotification={handleSendSmsProofNotification}
+                onOpenInHouseStudio={handleOpenInHouseStudio}
               />
             </div>
           )}
@@ -1129,12 +1154,17 @@ export function App() {
           />
         )}
 
-        {/* 4-Panel Memorial Service Bulletin Studio Modal */}
+        {/* BFH In-House Design & Print Studio Modal (All 6 Products & Themes) */}
         {isMemorialProgramModalOpen && (
           <MemorialProgramBuilderModal
             isOpen={isMemorialProgramModalOpen}
-            onClose={() => setIsMemorialProgramModalOpen(false)}
-            caseData={activeCase}
+            onClose={() => {
+              setIsMemorialProgramModalOpen(false);
+              setMemorialProgramTargetCase(null);
+            }}
+            caseData={memorialProgramTargetCase || activeCase}
+            initialProduct={memorialProgramProduct}
+            initialTheme={memorialProgramTheme}
           />
         )}
 

@@ -45,9 +45,11 @@ import {
   Disc, 
   Bell, 
   Check, 
-  Flame, 
   CheckCircle,
-  ExternalLink
+  ExternalLink,
+  ScrollText,
+  Edit3,
+  Flame
 } from 'lucide-react';
 import { CanvaTemplateVisualLayout } from './CanvaTemplateVisualLayout';
 
@@ -60,6 +62,7 @@ interface PrintStorefrontManagerProps {
   onUpdateCanvaStatus?: (status: CanvaIntegrationStatus) => void;
   onSelectCase?: (caseItem: GoldenRecordCase) => void;
   onSendSmsProofNotification?: (order: StorefrontOrder, phone: string, recipientName: string) => void;
+  onOpenInHouseStudio?: (template?: StorefrontDesignTemplate) => void;
 }
 
 export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
@@ -70,7 +73,8 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
   canvaStatus = INITIAL_CANVA_INTEGRATION_STATUS,
   onUpdateCanvaStatus,
   onSelectCase: _onSelectCase,
-  onSendSmsProofNotification
+  onSendSmsProofNotification,
+  onOpenInHouseStudio
 }) => {
   // Main Tab State
   const [activeTab, setActiveTab] = useState<'catalog' | 'orders' | 'preflight' | 'canva'>('catalog');
@@ -626,11 +630,40 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB 1: CANVA TEMPLATE LIBRARY (67 GOVERNED DESIGNS) */}
+      {/* TAB 1: CANVA TEMPLATE LIBRARY & IN-HOUSE PRINT STUDIO */}
       {/* ========================================================================= */}
       {activeTab === 'catalog' && (
         <div className="space-y-6">
           
+          {/* In-House Studio Master Launcher Banner */}
+          <div className="p-5 bg-gradient-to-r from-neutral-900 via-[#7f1d1d] to-neutral-900 text-white rounded-2xl shadow-md border border-neutral-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                  <Check className="w-3 h-3" />
+                  100% In-House • Native BFH Studio
+                </span>
+                <span className="px-2.5 py-0.5 bg-amber-400/20 text-amber-300 border border-amber-300/30 rounded-full text-[10px] font-bold">
+                  All 6 Signature Aesthetics Ready
+                </span>
+              </div>
+              <h2 className="text-lg font-bold font-serif-title">
+                BFH Native Stationery Designer & Duplex Print Engine
+              </h2>
+              <p className="text-xs text-neutral-300 max-w-2xl font-light">
+                Customize obituary narratives, order of service steps, pallbearers, portraits, and prayer cards right here inside BFH OS. Direct 1-tap duplex printing to any office printer without navigating to external websites.
+              </p>
+            </div>
+
+            <button
+              onClick={() => onOpenInHouseStudio && onOpenInHouseStudio()}
+              className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-neutral-900 font-bold text-xs rounded-xl flex items-center space-x-2 transition shadow-lg shrink-0 border border-amber-300"
+            >
+              <ScrollText className="w-4 h-4 text-neutral-900" />
+              <span>Launch In-House Studio ➔</span>
+            </button>
+          </div>
+
           {/* Category Filter Chips */}
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -800,17 +833,19 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
 
                       <div className="flex items-center space-x-1.5">
                         <button
-                          onClick={() => handleOpenTemplatePreview(template)}
-                          className="px-2.5 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-xs font-semibold transition"
-                          title="Open Multi-Page Proof Gallery"
+                          onClick={() => onOpenInHouseStudio ? onOpenInHouseStudio(template) : handleOpenTemplatePreview(template)}
+                          className="px-3 py-1.5 bg-[#991b1b] hover:bg-red-800 text-white rounded-lg text-xs font-bold transition shadow-2xs flex items-center gap-1"
+                          title="Open Native BFH In-House Design & Print Studio"
                         >
-                          Preview
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Customize & Print</span>
                         </button>
                         <button
                           onClick={() => handleOpenCreateOrder(template)}
-                          className="px-3 py-1.5 bg-[#991b1b] hover:bg-red-800 text-white rounded-lg text-xs font-bold transition shadow-2xs"
+                          className="px-2.5 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-xs font-semibold"
+                          title="Order Stationery for Case"
                         >
-                          Use Design
+                          Order
                         </button>
                       </div>
                     </div>
