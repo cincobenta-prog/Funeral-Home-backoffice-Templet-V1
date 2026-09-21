@@ -1838,55 +1838,80 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
                 </div>
               </div>
 
-              {/* Quantity, Paper Stock, Finishing Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Quantity, Paper Stock, Finishing */}
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-neutral-700 mb-1">
-                    Print Quantity:
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={2000}
-                    step={selectedTemplateForOrder.product_type === 'poster' ? 1 : 25}
-                    value={orderFormQuantity}
-                    onChange={(e) => setOrderFormQuantity(Number(e.target.value))}
-                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-xs font-mono font-bold"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-neutral-700">
+                      Print Quantity:
+                    </label>
+                    <span className="text-[11px] text-neutral-500 font-mono">
+                      Selected: <strong>{orderFormQuantity} units</strong>
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                    <input
+                      type="number"
+                      min={1}
+                      max={5000}
+                      step={1}
+                      value={orderFormQuantity}
+                      onChange={(e) => setOrderFormQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-full sm:w-32 p-2 bg-neutral-50 border border-neutral-300 rounded-lg text-xs font-mono font-bold focus:bg-white focus:border-[#991b1b] outline-none"
+                    />
+                    <div className="flex items-center gap-1 flex-wrap flex-1">
+                      {[25, 50, 75, 100, 150, 200, 250, 300, 500].map(qty => (
+                        <button
+                          key={qty}
+                          type="button"
+                          onClick={() => setOrderFormQuantity(qty)}
+                          className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold transition ${
+                            orderFormQuantity === qty
+                              ? 'bg-[#991b1b] text-white'
+                              : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
+                          }`}
+                        >
+                          {qty}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-neutral-700 mb-1">
-                    Paper Stock:
-                  </label>
-                  <select
-                    value={orderFormStock}
-                    onChange={(e) => setOrderFormStock(e.target.value as PaperStockType)}
-                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-xs font-semibold outline-none focus:border-[#991b1b]"
-                  >
-                    {PAPER_STOCK_OPTIONS.map(p => (
-                      <option key={p.stock} value={p.stock}>
-                        {p.stock} ({p.weightGsm})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-700 mb-1">
+                      Paper Stock:
+                    </label>
+                    <select
+                      value={orderFormStock}
+                      onChange={(e) => setOrderFormStock(e.target.value as PaperStockType)}
+                      className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-xs font-semibold outline-none focus:border-[#991b1b]"
+                    >
+                      {PAPER_STOCK_OPTIONS.map(p => (
+                        <option key={p.stock} value={p.stock}>
+                          {p.stock} ({p.weightGsm})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-neutral-700 mb-1">
-                    Finish & Binding:
-                  </label>
-                  <select
-                    value={orderFormFinish}
-                    onChange={(e) => setOrderFormFinish(e.target.value as FinishOptionType)}
-                    className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-xs font-semibold outline-none focus:border-[#991b1b]"
-                  >
-                    {FINISH_OPTIONS.map(f => (
-                      <option key={f.finish} value={f.finish}>
-                        {f.finish}
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-700 mb-1">
+                      Finish & Binding:
+                    </label>
+                    <select
+                      value={orderFormFinish}
+                      onChange={(e) => setOrderFormFinish(e.target.value as FinishOptionType)}
+                      className="w-full p-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-xs font-semibold outline-none focus:border-[#991b1b]"
+                    >
+                      {FINISH_OPTIONS.map(f => (
+                        <option key={f.finish} value={f.finish}>
+                          {f.finish}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1911,7 +1936,7 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
                         {tier}
                       </span>
                       <span className="text-[10px] text-neutral-500 mt-1">
-                        {tier === 'Standard (48-72h)' ? 'Standard Press Queue' : tier === 'Priority Rush (24h)' ? '+$75 Expedited Fee' : '+$150 Urgent Press Lock'}
+                        {tier === 'Standard (48-72h)' ? 'Standard Press Queue' : tier === 'Priority Rush (24h)' ? '+$75 Expedited Fee' : '+$125 Urgent Press Lock'}
                       </span>
                     </button>
                   ))}
@@ -1932,7 +1957,7 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
                 />
               </div>
 
-              {/* Live Real-Time Pricing Summary */}
+              {/* Live Real-Time Itemized Pricing Summary */}
               {(() => {
                 const pricing = calculateOrderPrice(
                   selectedTemplateForOrder,
@@ -1942,22 +1967,33 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
                   orderFormTurnaround
                 );
                 return (
-                  <div className="p-4 bg-gradient-to-r from-red-50 to-amber-50 rounded-xl border border-red-200 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold text-[#991b1b] uppercase tracking-wider block">Estimated Total Price</span>
-                      <div className="text-xl font-bold font-mono text-[#991b1b]">
-                        ${pricing.totalPrice.toFixed(2)}
-                      </div>
-                      <span className="text-[10px] text-neutral-600">
-                        ${pricing.unitPrice.toFixed(2)} / unit • Includes setup & finishing
+                  <div className="p-4 bg-gradient-to-r from-neutral-50 to-amber-50/60 rounded-xl border border-red-200 space-y-2">
+                    <div className="flex items-center justify-between border-b border-red-200/60 pb-2">
+                      <span className="text-xs font-bold text-[#991b1b] uppercase tracking-wider">
+                        Transparent Itemized Pricing Calculation
+                      </span>
+                      <span className="text-[10px] text-neutral-500 font-mono">
+                        ({pricing.baseUnitPrice.toFixed(2)} + {pricing.stockUnitPrice.toFixed(2)}) × {orderFormQuantity} + {pricing.finishSurcharge} + {pricing.rushSurcharge}
                       </span>
                     </div>
 
-                    <div className="text-right text-[11px] text-neutral-600 space-y-0.5">
-                      <div>Finish Setup: <strong>${pricing.finishSurcharge.toFixed(2)}</strong></div>
-                      {pricing.rushSurcharge > 0 && (
-                        <div className="text-red-700 font-bold">Rush Surcharge: +${pricing.rushSurcharge.toFixed(2)}</div>
-                      )}
+                    <div className="grid grid-cols-2 gap-2 text-xs text-neutral-700">
+                      <div>Base Printing: <strong className="font-mono">${(pricing.baseUnitPrice * orderFormQuantity).toFixed(2)}</strong></div>
+                      <div>Paper Upgrade: <strong className="font-mono">${(pricing.stockUnitPrice * orderFormQuantity).toFixed(2)}</strong></div>
+                      <div>Finishing Setup: <strong className="font-mono">${pricing.finishSurcharge.toFixed(2)}</strong></div>
+                      <div>Turnaround Rush: <strong className="font-mono">${pricing.rushSurcharge.toFixed(2)}</strong></div>
+                    </div>
+
+                    <div className="pt-2 border-t border-red-200/80 flex items-center justify-between">
+                      <div>
+                        <div className="text-xl font-bold font-mono text-[#991b1b]">
+                          ${pricing.totalPrice.toFixed(2)}
+                        </div>
+                        <span className="text-[10px] text-neutral-600">
+                          ${pricing.unitPrice.toFixed(2)} / unit • AP-47 Synced
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-neutral-500">Includes all finishing & preflight checks</span>
                     </div>
                   </div>
                 );

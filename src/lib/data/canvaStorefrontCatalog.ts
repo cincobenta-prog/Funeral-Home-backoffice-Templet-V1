@@ -2420,51 +2420,64 @@ export function generatePlacementManifestSha256(placements: Array<{ pageNumber: 
   return (hexPart + '8f4c2e1b9a7d3f6e5c8b2a1d4e7f0b3c6a9e2d5f8b1c4e7a0d3f6b9c2e5a8d1f').slice(0, 64);
 }
 
+export interface OrderPriceCalculation {
+  baseUnitPrice: number;
+  stockUnitPrice: number;
+  unitPrintPrice: number;
+  printSubtotal: number;
+  finishSurcharge: number;
+  rushSurcharge: number;
+  totalPrice: number;
+  unitPrice: number;
+}
+
 export function calculateOrderPrice(
   template: StorefrontDesignTemplate,
   quantity: number,
   paperStock: PaperStockType,
   finishOption: FinishOptionType,
   turnaroundTier: TurnaroundTier
-): { unitPrice: number; totalPrice: number; rushSurcharge: number; finishSurcharge: number } {
-  let baseUnit = template.base_price / 100;
+): OrderPriceCalculation {
+  const safeQty = Math.max(1, quantity || 1);
+  
+  // Base unit price ($ per copy / card / poster)
+  let baseUnitPrice = (template.base_price || 250) / 100;
   if (template.product_type === 'poster') {
-    baseUnit = template.base_price;
+    baseUnitPrice = template.base_price || 45;
   }
   
+  // Paper stock surcharge per unit
   const stockInfo = PAPER_STOCK_OPTIONS.find(p => p.stock === paperStock);
-  const stockSurcharge = (stockInfo ? stockInfo.surchargePer100 : 0) / 100;
+  const stockUnitPrice = (stockInfo ? stockInfo.surchargePer100 : 0) / 100;
   
+  // Unit print price (Base + Paper stock upgrade)
+  const unitPrintPrice = Math.max(0.1, baseUnitPrice + stockUnitPrice);
+  const printSubtotal = unitPrintPrice * safeQty;
+  
+  // Finishing & binding setup cost
   const finishInfo = FINISH_OPTIONS.find(f => f.finish === finishOption);
   const finishSurcharge = finishInfo ? finishInfo.setupCost : 0;
   
-  let rushMultiplier = 1.0;
+  // Turnaround expedited surcharge
   let rushSurcharge = 0;
   if (turnaroundTier === 'Priority Rush (24h)') {
-    rushMultiplier = 1.25;
     rushSurcharge = 75;
   } else if (turnaroundTier === 'Same-Day Urgent (12h)') {
-    rushMultiplier = 1.50;
-    rushSurcharge = 150;
+    rushSurcharge = 125;
   }
   
-  let unit = (baseUnit + stockSurcharge) * rushMultiplier;
-  if (template.product_type === 'poster') {
-    unit = (template.base_price + finishSurcharge) * rushMultiplier;
-    const total = unit * quantity + rushSurcharge;
-    return {
-      unitPrice: Math.round(unit * 100) / 100,
-      totalPrice: Math.round(total * 100) / 100,
-      rushSurcharge,
-      finishSurcharge
-    };
-  }
+  const totalPrice = Math.round((printSubtotal + finishSurcharge + rushSurcharge) * 100) / 100;
+  const unitPrice = Math.round((totalPrice / safeQty) * 100) / 100;
   
-  const subtotal = unit * quantity + finishSurcharge + rushSurcharge;
   return {
-    unitPrice: Math.round(unit * 100) / 100,
-    totalPrice: Math.round(subtotal * 100) / 100,
+    baseUnitPrice: Math.round(baseUnitPrice * 100) / 100,
+    stockUnitPrice: Math.round(stockUnitPrice * 100) / 100,
+    unitPrintPrice: Math.round(unitPrintPrice * 100) / 100,
+    printSubtotal: Math.round(printSubtotal * 100) / 100,
+    finishSurcharge,
     rushSurcharge,
-    finishSurcharge
+    totalPrice,
+    unitPrice
   };
 }
+

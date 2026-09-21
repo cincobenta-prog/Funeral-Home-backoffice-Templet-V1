@@ -1332,6 +1332,10 @@ export function App() {
             onOpenFullStorefront={() => {
               setBackOfficeTab('storefront');
             }}
+            onOpenInHouseStudio={(template) => {
+              setIsStorefrontOrderModalOpen(false);
+              handleOpenInHouseStudio(template, storefrontTargetCase || activeCase);
+            }}
           />
         )}
       </div>
