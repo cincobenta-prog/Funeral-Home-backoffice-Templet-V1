@@ -18,8 +18,10 @@ import {
 import { 
   Printer, 
   X, 
-  Check 
+  Check,
+  ExternalLink 
 } from 'lucide-react';
+import { CanvaTemplateVisualLayout } from './CanvaTemplateVisualLayout';
 
 interface StorefrontOrderModalProps {
   caseItem: GoldenRecordCase;
@@ -245,6 +247,43 @@ export const StorefrontOrderModal: React.FC<StorefrontOrderModalProps> = ({
                   );
                 })}
               </div>
+
+              {/* Live Visual Mockup Preview of Selected Template */}
+              {selectedTemplate && (
+                <div className="mt-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-36 h-28 shrink-0 rounded-lg overflow-hidden border border-neutral-300 shadow-2xs">
+                    <CanvaTemplateVisualLayout 
+                      template={selectedTemplate}
+                      mode="card"
+                      sampleName={caseItem.decedent?.legalName || 'Honored Decedent'}
+                      sampleDates={caseItem.decedent?.dateOfBirth && caseItem.decedent?.dateOfDeath ? `${caseItem.decedent.dateOfBirth} – ${caseItem.decedent.dateOfDeath}` : undefined}
+                      className="w-full h-full"
+                    />
+                  </div>
+                  <div className="flex-1 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <strong className="font-bold text-neutral-900 text-sm font-serif-title">
+                        {cleanTemplateTitle(selectedTemplate.title)}
+                      </strong>
+                      <a 
+                        href={`https://www.canva.com/design/${selectedTemplate.id}/edit`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-neutral-900 rounded font-bold text-[11px] flex items-center gap-1 shadow-2xs"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Edit in Canva
+                      </a>
+                    </div>
+                    <p className="text-neutral-600 text-[11px]">
+                      {selectedTemplate.product_name} • {selectedTemplate.family} Collection • {selectedTemplate.displayed_size} • {selectedTemplate.page_count} Pages
+                    </p>
+                    <p className="text-neutral-500 text-[10px] italic">
+                      Live layout preview with framed portrait, ornate gilded borders, and commemorative typography.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Print Quantity, Stock & Turnaround Grid */}

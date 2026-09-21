@@ -46,8 +46,10 @@ import {
   Bell, 
   Check, 
   Flame, 
-  CheckCircle
+  CheckCircle,
+  ExternalLink
 } from 'lucide-react';
+import { CanvaTemplateVisualLayout } from './CanvaTemplateVisualLayout';
 
 interface PrintStorefrontManagerProps {
   cases: GoldenRecordCase[];
@@ -744,69 +746,34 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
                   key={template.id}
                   className="bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-2xs hover:shadow-md transition group flex flex-col justify-between"
                 >
-                  {/* Template Visual Cover Banner */}
+                  {/* Template Visual Cover Banner with Realistic Stationery Layout */}
                   <div 
-                    className="h-44 p-4 relative flex flex-col justify-between overflow-hidden border-b border-neutral-100 cursor-pointer"
-                    style={{ backgroundColor: template.bg || '#f7f4ee' }}
+                    className="h-48 relative overflow-hidden border-b border-neutral-100 cursor-pointer group/card"
                     onClick={() => handleOpenTemplatePreview(template)}
                   >
-                    {/* Visual Gold/Color Trim Border */}
-                    <div 
-                      className="absolute inset-2 border rounded-lg pointer-events-none opacity-40"
-                      style={{ borderColor: template.accent || '#815b3e' }}
+                    <CanvaTemplateVisualLayout 
+                      template={template}
+                      mode="card"
+                      className="w-full h-full"
                     />
 
-                    {/* Top Badges */}
-                    <div className="flex items-center justify-between z-10">
-                      <span 
-                        className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white shadow-2xs"
-                        style={{ backgroundColor: template.accent || '#815b3e' }}
+                    {/* Hover Overlay with Preview & Direct Canva Launch */}
+                    <div className="absolute inset-0 bg-neutral-900/60 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center space-x-2 backdrop-blur-2xs z-20">
+                      <span className="px-3 py-1.5 bg-white text-neutral-900 rounded-lg text-xs font-bold shadow-md flex items-center gap-1">
+                        <Eye className="w-3.5 h-3.5" />
+                        Preview Proof
+                      </span>
+                      <a 
+                        href={`https://www.canva.com/design/${template.id}/view`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-900 rounded-lg text-xs font-bold shadow-md flex items-center gap-1"
+                        title="Open Design in Canva"
                       >
-                        {template.family}
-                      </span>
-                      <span className="px-2 py-0.5 bg-white/90 text-neutral-800 rounded text-[10px] font-bold shadow-2xs border border-neutral-200">
-                        {template.page_count} {template.page_count === 1 ? 'Page' : 'Pages'}
-                      </span>
-                    </div>
-
-                    {/* Center Realistic Typography Motif */}
-                    <div className="text-center my-auto z-10 px-2">
-                      <span 
-                        className="text-[10px] font-serif uppercase tracking-widest block opacity-70"
-                        style={{ color: template.accent || '#815b3e' }}
-                      >
-                        In Loving Memory
-                      </span>
-                      <h4 
-                        className="text-sm font-bold font-serif-title leading-tight line-clamp-2 mt-0.5"
-                        style={{ color: template.accent || '#451a03' }}
-                      >
-                        {cleanTitle}
-                      </h4>
-                      <span className="text-[10px] text-neutral-600 block mt-1">
-                        {template.displayed_size}
-                      </span>
-                    </div>
-
-                    {/* Bottom Palette Swatches & Hover Prompt */}
-                    <div className="flex items-center justify-between z-10 pt-1 border-t border-black/5 text-[10px]">
-                      <div className="flex items-center space-x-1.5">
-                        <span 
-                          className="w-3 h-3 rounded-full border border-black/20"
-                          style={{ backgroundColor: template.accent || '#815b3e' }}
-                          title={`Accent: ${template.accent}`}
-                        />
-                        <span 
-                          className="w-3 h-3 rounded-full border border-black/20"
-                          style={{ backgroundColor: template.bg || '#f7f4ee' }}
-                          title={`Background: ${template.bg}`}
-                        />
-                      </div>
-
-                      <span className="text-[10px] font-bold text-neutral-600 group-hover:text-[#991b1b] flex items-center gap-1 transition">
-                        <Eye className="w-3 h-3" />
-                        Preview Pages
-                      </span>
+                        <ExternalLink className="w-3 h-3" />
+                        Canva
+                      </a>
                     </div>
                   </div>
 
@@ -1340,12 +1307,24 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
                 </div>
               </div>
 
-              <button
-                onClick={() => { setPreviewTemplate(null); setPreviewOrder(null); }}
-                className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <a 
+                  href={`https://www.canva.com/design/${previewTemplate.id}/edit`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-900 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow-sm"
+                  title="Open this template directly in Canva"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open in Canva</span>
+                </a>
+                <button
+                  onClick={() => { setPreviewTemplate(null); setPreviewOrder(null); }}
+                  className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body: Two-Column Display */}
@@ -1355,112 +1334,91 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
               <div className="lg:col-span-2 flex flex-col items-center justify-between space-y-4">
                 
                 {/* Visual Page Stage */}
-                <div className="w-full max-w-lg aspect-[4/3] sm:aspect-[1.4/1] bg-white rounded-xl shadow-lg border border-neutral-300 p-6 relative overflow-hidden flex flex-col justify-between"
+                <div 
+                  className="w-full max-w-lg aspect-[4/3] sm:aspect-[1.4/1] bg-white rounded-xl shadow-lg border border-neutral-300 overflow-hidden relative flex flex-col justify-between"
                   style={{ backgroundColor: previewTemplate.bg || '#f9f6f0' }}
                 >
-                  {/* Filigree / Gold Border */}
-                  <div 
-                    className="absolute inset-3 border-2 rounded pointer-events-none opacity-40"
-                    style={{ borderColor: previewTemplate.accent || '#815b3e' }}
-                  />
-
-                  {/* Top Page Header */}
-                  <div className="flex justify-between items-center z-10 text-[10px] font-mono">
-                    <span style={{ color: previewTemplate.accent || '#815b3e' }} className="font-bold uppercase tracking-wider">
-                      {previewTemplate.family}
-                    </span>
-                    <span className="px-2 py-0.5 bg-black/10 rounded font-bold text-neutral-700">
-                      Page {currentPreviewPageIndex + 1} of {previewTemplate.page_count}
-                    </span>
-                  </div>
-
-                  {/* Page Center Representation based on Page Number */}
-                  <div className="my-auto text-center z-10 space-y-2 px-4">
-                    {currentPreviewPageIndex === 0 ? (
-                      // Page 1: Front Cover
-                      <>
-                        <span 
-                          className="text-[11px] font-serif uppercase tracking-widest block font-bold"
-                          style={{ color: previewTemplate.accent || '#815b3e' }}
-                        >
-                          In Loving Celebration & Homegoing
+                  {currentPreviewPageIndex === 0 ? (
+                    // Page 1: Front Cover with High-Fidelity Stationery Artwork
+                    <CanvaTemplateVisualLayout 
+                      template={previewTemplate}
+                      mode="modal"
+                      sampleName={previewOrder ? previewOrder.caseName : 'Bishop Cornelius Washington'}
+                      sampleDates="July 14, 1942 – September 18, 2026"
+                      className="w-full h-full p-4"
+                    />
+                  ) : (
+                    // Inner Pages (Obituary, Order of Service, Tributes)
+                    <div className="p-6 flex-1 flex flex-col justify-between relative">
+                      {/* Top Header */}
+                      <div className="flex justify-between items-center text-[10px] font-mono border-b border-black/10 pb-1.5">
+                        <span style={{ color: previewTemplate.accent || '#815b3e' }} className="font-bold uppercase tracking-wider">
+                          {previewTemplate.family}
                         </span>
-                        <h2 
-                          className="text-lg sm:text-xl font-bold font-serif-title leading-tight"
-                          style={{ color: previewTemplate.accent || '#451a03' }}
-                        >
-                          {previewOrder ? previewOrder.caseName : 'Bishop Cornelius Washington'}
-                        </h2>
-                        <div className="w-24 h-24 mx-auto my-2 rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-2 text-center"
-                          style={{ borderColor: previewTemplate.accent || '#815b3e', backgroundColor: 'rgba(255,255,255,0.7)' }}
-                        >
-                          <ImageIcon className="w-6 h-6 text-neutral-400 mb-1" />
-                          <span className="text-[9px] font-bold text-neutral-600">Cover Portrait Placeholder</span>
-                        </div>
-                        <p className="text-[10px] text-neutral-600 font-serif italic">
-                          Sunrise: July 14, 1942 • Sunset: September 18, 2026
-                        </p>
-                        <p className="text-[10px] text-neutral-700 font-semibold">
-                          Benta's Funeral Home • Harlem, New York
-                        </p>
-                      </>
-                    ) : currentPreviewPageIndex === 1 ? (
-                      // Page 2: Obituary
-                      <>
-                        <h3 
-                          className="text-sm font-bold font-serif-title uppercase tracking-wider"
-                          style={{ color: previewTemplate.accent || '#815b3e' }}
-                        >
-                          Reflections on a Life Well-Lived
-                        </h3>
-                        <div className="text-left text-[10px] text-neutral-700 space-y-1.5 font-serif leading-relaxed line-clamp-6">
-                          <p>
-                            A beloved father, pastor, community leader, and faithful shepherd whose warmth touched Harlem and beyond. Born in Harlem and educated in New York City, he dedicated his entire life to service, faith, and family.
-                          </p>
-                          <p>
-                            He leaves to cherish his memory his devoted spouse, loving children, grandchildren, congregation, and an enduring legacy of kindness.
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      // Subsequent Pages: Order of Service / Hymns / Photo Collages
-                      <>
-                        <h3 
-                          className="text-sm font-bold font-serif-title uppercase tracking-wider"
-                          style={{ color: previewTemplate.accent || '#815b3e' }}
-                        >
-                          {previewTemplate.previewPages?.[currentPreviewPageIndex]?.label || `Page ${currentPreviewPageIndex + 1} • Order of Service`}
-                        </h3>
-                        <div className="text-left text-[10px] text-neutral-700 space-y-1 font-serif">
-                          <div className="flex justify-between border-b border-black/10 py-0.5">
-                            <span>Musical Prelude</span>
-                            <span className="italic">Organist</span>
-                          </div>
-                          <div className="flex justify-between border-b border-black/10 py-0.5">
-                            <span>Scripture Readings (Old & New Testament)</span>
-                            <span className="italic">Clergy</span>
-                          </div>
-                          <div className="flex justify-between border-b border-black/10 py-0.5">
-                            <span>Prayer of Comfort</span>
-                            <span className="italic">Pastor</span>
-                          </div>
-                          <div className="flex justify-between border-b border-black/10 py-0.5">
-                            <span>Acknowledgements & Resolutions</span>
-                            <span className="italic">Family</span>
-                          </div>
-                          <div className="flex justify-between py-0.5">
-                            <span>Eulogy & Benediction</span>
-                            <span className="italic">Presiding Bishop</span>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                        <span className="px-2 py-0.5 bg-black/10 rounded font-bold text-neutral-700">
+                          Page {currentPreviewPageIndex + 1} of {previewTemplate.page_count}
+                        </span>
+                      </div>
 
-                  {/* Bottom Footer */}
-                  <div className="text-center z-10 text-[9px] text-neutral-500 font-serif border-t border-black/5 pt-1">
-                    Benta's Funeral Home • 630 St. Nicholas Ave, New York, NY 10030
-                  </div>
+                      {/* Content */}
+                      <div className="my-auto py-2">
+                        {currentPreviewPageIndex === 1 ? (
+                          <>
+                            <h3 
+                              className="text-sm font-bold font-serif-title uppercase tracking-wider mb-2 text-center"
+                              style={{ color: previewTemplate.accent || '#815b3e' }}
+                            >
+                              Reflections on a Life Well-Lived
+                            </h3>
+                            <div className="text-left text-[10px] text-neutral-700 space-y-1.5 font-serif leading-relaxed line-clamp-6">
+                              <p>
+                                A beloved father, pastor, community leader, and faithful shepherd whose warmth touched Harlem and beyond. Born in Harlem and educated in New York City, he dedicated his entire life to service, faith, and family.
+                              </p>
+                              <p>
+                                He leaves to cherish his memory his devoted spouse, loving children, grandchildren, congregation, and an enduring legacy of kindness.
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <h3 
+                              className="text-sm font-bold font-serif-title uppercase tracking-wider mb-2 text-center"
+                              style={{ color: previewTemplate.accent || '#815b3e' }}
+                            >
+                              {previewTemplate.previewPages?.[currentPreviewPageIndex]?.label || `Page ${currentPreviewPageIndex + 1} • Order of Service`}
+                            </h3>
+                            <div className="text-left text-[10px] text-neutral-700 space-y-1 font-serif">
+                              <div className="flex justify-between border-b border-black/10 py-0.5">
+                                <span>Musical Prelude</span>
+                                <span className="italic">Organist</span>
+                              </div>
+                              <div className="flex justify-between border-b border-black/10 py-0.5">
+                                <span>Scripture Readings (Old & New Testament)</span>
+                                <span className="italic">Clergy</span>
+                              </div>
+                              <div className="flex justify-between border-b border-black/10 py-0.5">
+                                <span>Prayer of Comfort</span>
+                                <span className="italic">Pastor</span>
+                              </div>
+                              <div className="flex justify-between border-b border-black/10 py-0.5">
+                                <span>Acknowledgements & Resolutions</span>
+                                <span className="italic">Family</span>
+                              </div>
+                              <div className="flex justify-between py-0.5">
+                                <span>Eulogy & Benediction</span>
+                                <span className="italic">Presiding Bishop</span>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Bottom Footer */}
+                      <div className="text-center text-[9px] text-neutral-500 font-serif border-t border-black/5 pt-1">
+                        Benta's Funeral Home • 630 St. Nicholas Ave, New York, NY 10030
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Page Navigation Controls */}
