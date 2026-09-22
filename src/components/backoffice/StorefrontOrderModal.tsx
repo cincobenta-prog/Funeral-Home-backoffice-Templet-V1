@@ -21,7 +21,6 @@ import {
   Printer, 
   X, 
   Check,
-  ExternalLink,
   Search,
   Sparkles,
   Palette,
@@ -389,33 +388,22 @@ export const StorefrontOrderModal: React.FC<StorefrontOrderModalProps> = ({
                         </p>
                       </div>
 
-                      {/* Dual Action Buttons: Native In-House Studio (Primary) + Canva (Secondary) */}
+                      {/* In-House Studio Action Button */}
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={handleLaunchInHouseBuilder}
-                          className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-neutral-950 font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-xs transition"
+                          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-neutral-950 font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-xs transition"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>Customize in In-House Studio</span>
+                          <span>🎨 Customize in BFH In-House Studio</span>
                         </button>
-
-                        <a 
-                          href={`https://www.canva.com/design/${selectedTemplate.id}/edit`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2.5 py-1.5 bg-white hover:bg-neutral-100 border border-neutral-300 text-neutral-700 rounded-lg font-semibold text-xs flex items-center gap-1 transition"
-                          title="Open in external Canva account"
-                        >
-                          <ExternalLink className="w-3 h-3 text-neutral-500" />
-                          <span>Canva</span>
-                        </a>
                       </div>
                     </div>
 
                     <div className="p-2 bg-white/80 rounded-lg border border-neutral-200/80 text-[11px] text-neutral-600 flex items-center gap-2">
-                      <span className="font-semibold text-neutral-800">✨ Self-Contained In-House Editing:</span>
-                      <span>No Canva login required. Edit obituary paragraphs, liturgical order of service, hymn stanzas, and portrait photos directly in BFH Back Office.</span>
+                      <span className="font-semibold text-neutral-800">✨ 100% Native Back Office Studio:</span>
+                      <span>Edit obituary narratives, liturgical order of service, pallbearers, and portrait photos directly in BFH Back Office. Instant duplex PDF printing with zero external website logins.</span>
                     </div>
                   </div>
                 </div>

@@ -24,28 +24,52 @@ export function getTemplatePreviewImage(template: StorefrontDesignTemplate): str
   const title = (template.title || '').toLowerCase();
   const prod = template.product_type;
 
-  if (prod === 'prayer') return '/images/templates/prayer_card.jpg';
-  if (prod === 'poster') return '/images/templates/memorial_easel.jpg';
-  if (prod === 'bookmark') return '/images/templates/prayer_card.jpg';
-  
-  if (fam.includes('blossom') || title.includes('blossom') || fam.includes('rose') || fam.includes('orchid') || fam.includes('serenity')) {
-    return '/images/templates/cherry_blossom.jpg';
+  // 1. Photograph / Cyril James Osbourne Collection
+  if (fam.includes('photograph') || title.includes('photograph') || title.includes('photo')) {
+    if (prod === 'prayer' || prod === 'thanks' || prod === 'bookmark') {
+      return '/images/templates/photograph_card.jpg';
+    }
+    return '/images/templates/photograph_spread.jpg';
   }
-  if (fam.includes('cathedral') || fam.includes('stained') || fam.includes('cross') || title.includes('cathedral')) {
-    return '/images/templates/cathedral_stained.jpg';
+
+  // 2. Seasons / Green Leaf & Dew Drop Collection
+  if (fam.includes('season') || title.includes('season') || fam.includes('spring')) {
+    return '/images/templates/seasons_spread.jpg';
   }
+
+  // 3. Cherry Blossom / Clarise Hopkins Pink Floral Collection
+  if (fam.includes('blossom') || title.includes('blossom') || fam.includes('rose') || fam.includes('serenity')) {
+    if (prod === 'prayer' || prod === 'thanks' || prod === 'bookmark') {
+      return '/images/templates/cherry_blossom_card.jpg';
+    }
+    return '/images/templates/cherry_blossom_spread.jpg';
+  }
+
+  // 4. Colleen / Keepsake / Royal Majestic Purple Collection
   if (fam.includes('colleen') || fam.includes('keepsake') || fam.includes('royal') || fam.includes('superstar') || title.includes('colleen')) {
     return '/images/templates/royal_purple.jpg';
   }
+
+  // 5. Cathedral Stained Glass / Sacred Cross Collection
+  if (fam.includes('cathedral') || fam.includes('stained') || fam.includes('cross') || title.includes('cathedral')) {
+    return '/images/templates/cathedral_stained.jpg';
+  }
+
+  // 6. Words Series / Ebony & Gold Minimal Luxe Collection
   if (fam.includes('words') || fam.includes('ebony') || fam.includes('luxe') || fam.includes('minimal')) {
     return '/images/templates/ebony_gold.jpg';
   }
+
+  // 7. African Kente Heritage Collection
   if (fam.includes('african') || fam.includes('kente') || fam.includes('sunset') || fam.includes('caribbean')) {
     return '/images/templates/african_kente.jpg';
   }
-  if (fam.includes('linen') || fam.includes('magazine') || fam.includes('benta') || fam.includes('general')) {
-    return '/images/templates/harlem_heritage.jpg';
-  }
+
+  // Product-specific fallbacks
+  if (prod === 'prayer' || prod === 'bookmark') return '/images/templates/prayer_card.jpg';
+  if (prod === 'thanks') return '/images/templates/cherry_blossom_card.jpg';
+  if (prod === 'poster') return '/images/templates/memorial_easel.jpg';
+  if (prod === 'program' || prod === 'dvd') return '/images/templates/harlem_heritage.jpg';
 
   return '/images/templates/harlem_heritage.jpg';
 }

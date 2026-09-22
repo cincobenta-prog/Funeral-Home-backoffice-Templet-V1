@@ -46,7 +46,6 @@ import {
   Bell, 
   Check, 
   CheckCircle,
-  ExternalLink,
   ScrollText,
   Edit3,
   Flame
@@ -790,23 +789,25 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
                       className="w-full h-full"
                     />
 
-                    {/* Hover Overlay with Preview & Direct Canva Launch */}
+                    {/* Hover Overlay with Preview & In-House Studio Launch */}
                     <div className="absolute inset-0 bg-neutral-900/60 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center space-x-2 backdrop-blur-2xs z-20">
                       <span className="px-3 py-1.5 bg-white text-neutral-900 rounded-lg text-xs font-bold shadow-md flex items-center gap-1">
                         <Eye className="w-3.5 h-3.5" />
                         Preview Proof
                       </span>
-                      <a 
-                        href={`https://www.canva.com/design/${template.id}/view`}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onOpenInHouseStudio) onOpenInHouseStudio(template);
+                          else handleOpenTemplatePreview(template);
+                        }}
                         className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-900 rounded-lg text-xs font-bold shadow-md flex items-center gap-1"
-                        title="Open Design in Canva"
+                        title="Customize in Native BFH Studio"
                       >
-                        <ExternalLink className="w-3 h-3" />
-                        Canva
-                      </a>
+                        <Sparkles className="w-3 h-3" />
+                        <span>In-House Studio</span>
+                      </button>
                     </div>
                   </div>
 
@@ -1343,16 +1344,20 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
               </div>
 
               <div className="flex items-center space-x-2">
-                <a 
-                  href={`https://www.canva.com/design/${previewTemplate.id}/edit`}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => {
+                    const t = previewTemplate;
+                    setPreviewTemplate(null);
+                    setPreviewOrder(null);
+                    if (onOpenInHouseStudio) onOpenInHouseStudio(t);
+                  }}
                   className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-900 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow-sm"
-                  title="Open this template directly in Canva"
+                  title="Open In-House Studio to edit this layout"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Open in Canva</span>
-                </a>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Customize in In-House Studio</span>
+                </button>
                 <button
                   onClick={() => { setPreviewTemplate(null); setPreviewOrder(null); }}
                   className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
