@@ -1377,10 +1377,10 @@ export const PrintStorefrontManager: React.FC<PrintStorefrontManagerProps> = ({
                     // Page 1: Front Cover with High-Fidelity Stationery Artwork
                     <CanvaTemplateVisualLayout 
                       template={previewTemplate}
-                      mode="modal"
+                      mode="card"
                       sampleName={previewOrder ? previewOrder.caseName : 'Bishop Cornelius Washington'}
                       sampleDates="July 14, 1942 – September 18, 2026"
-                      className="w-full h-full p-4"
+                      className="w-full h-full"
                     />
                   ) : (
                     // Inner Pages (Obituary, Order of Service, Tributes)
