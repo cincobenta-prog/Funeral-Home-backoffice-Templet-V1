@@ -10,10 +10,16 @@ import {
   BFH_GPL_2026, 
   CATALOG_CASKETS, 
   CATALOG_VAULTS, 
-  CATALOG_FLOWERS, 
   calculateAP47Totals, 
   getDefaultStatementOfGoodsForCase 
 } from '../../lib/data/generalPriceList';
+import {
+  BFH_FLORAL_CATALOG,
+  BFH_FLORAL_CATEGORIES,
+  FloralCategory,
+  FloralSize,
+  getFloralByCode
+} from '../../lib/data/floralCatalog';
 import { 
   FileText, 
   Printer, 
@@ -28,8 +34,14 @@ import {
   X, 
   BookOpen, 
   Building2, 
-  Copy
+  Copy,
+  Sparkles,
+  Layers,
+  Tag,
+  Image as ImageIcon
 } from 'lucide-react';
+
+
 
 interface ArrangementContractBuilderModalProps {
   isOpen: boolean;
@@ -74,6 +86,14 @@ export const ArrangementContractBuilderModal: React.FC<ArrangementContractBuilde
   const [newCustomVehicleCount, setNewCustomVehicleCount] = useState(1);
   const [newCustomVehiclePrice, setNewCustomVehiclePrice] = useState(650);
 
+  // BFH Catalog Floral Selection State
+  const [selectedFloralCategory, setSelectedFloralCategory] = useState<FloralCategory | 'all'>('all');
+  const [selectedFloralCode, setSelectedFloralCode] = useState<string>('BFH-CC-005');
+  const [selectedFloralSize, setSelectedFloralSize] = useState<FloralSize>('medium');
+  const [selectedFloralRibbon, setSelectedFloralRibbon] = useState<string>('Loving Family');
+  const [selectedFloralQty, setSelectedFloralQty] = useState<number>(1);
+  const [showVisualFloralGallery, setShowVisualFloralGallery] = useState<boolean>(false);
+
   const [newCustomFlowerType, setNewCustomFlowerType] = useState<FloralArrangementItem['type']>('casket_spray');
   const [newCustomFlowerDesc, setNewCustomFlowerDesc] = useState('');
   const [newCustomFlowerQty, setNewCustomFlowerQty] = useState(1);
@@ -88,6 +108,7 @@ export const ArrangementContractBuilderModal: React.FC<ArrangementContractBuilde
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   };
+
 
   // -------------------------------------------------------------
   // HANDLERS FOR SERVICE TYPE & FLAT RATE SWITCHING
@@ -220,7 +241,35 @@ export const ArrangementContractBuilderModal: React.FC<ArrangementContractBuilde
     setStatementData(calculateAP47Totals(updated));
   };
 
+  const handleAddBFHFloral = () => {
+    const product = getFloralByCode(selectedFloralCode) || BFH_FLORAL_CATALOG[0];
+    const unitPrice = product.pricing[selectedFloralSize];
+    const ribbonText = selectedFloralRibbon.trim();
+    
+    const newFlower: FloralArrangementItem = {
+      id: `fl-${product.code.toLowerCase().replace(/[^a-z0-9]/g, '_')}-${Date.now()}`,
+      type: product.category,
+      code: product.code,
+      name: product.name,
+      size: selectedFloralSize,
+      ribbonText: ribbonText || undefined,
+      imageUrl: product.imageUrl,
+      description: `${product.code} - ${product.name} (${selectedFloralSize.toUpperCase()} ${product.dimensions[selectedFloralSize]}${ribbonText ? ` • Sash: "${ribbonText}"` : ''})`,
+      quantity: selectedFloralQty,
+      unitPrice: unitPrice,
+      totalAmount: unitPrice * selectedFloralQty
+    };
+
+    const updated = { ...statementData };
+    updated.sectionI.I6_flowersSelected = true;
+    updated.sectionI.I6_noFlowersRequested = false;
+    updated.sectionI.I6_flowerItems = [...(updated.sectionI.I6_flowerItems || []), newFlower];
+    setStatementData(calculateAP47Totals(updated));
+    showToast(`💐 Added ${product.code} (${selectedFloralSize.toUpperCase()} - $${unitPrice.toFixed(2)}) to contract!`);
+  };
+
   const handleAddCustomFlower = () => {
+
     if (!newCustomFlowerDesc.trim()) return;
     const newFlower: FloralArrangementItem = {
       id: `fl-${Date.now()}`,
@@ -1238,14 +1287,19 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
 
               {/* 3.C FLOWERS & FLORAL ARRANGEMENTS */}
               {activeVariablesCategory === 'flowers' && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
+                <div className="space-y-5">
+                  <div className="flex flex-wrap justify-between items-center gap-3">
                     <div>
-                      <h4 className="font-bold text-sm text-neutral-900">Flowers & Floral Tributes (GPL Range: $25.00 & Up)</h4>
-                      <p className="text-xs text-neutral-500">Add custom family pieces, standing sprays, casket blankets, or mark as No Flowers.</p>
+                      <div className="flex items-center space-x-2">
+                        <span className="p-1.5 bg-rose-100 text-rose-800 rounded-lg">💐</span>
+                        <h4 className="font-bold text-sm text-neutral-900 font-serif-title">Flowers & Floral Tributes (Benta&apos;s Florist Collection)</h4>
+                      </div>
+                      <p className="text-xs text-neutral-500 mt-0.5">
+                        Handcrafted by our master florist. Select by category and size with real-time pricing and visual thumbnail verification.
+                      </p>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <label className="flex items-center space-x-1.5 cursor-pointer bg-neutral-100 px-3 py-1.5 rounded-xl border border-neutral-300 text-xs">
+                      <label className="flex items-center space-x-1.5 cursor-pointer bg-neutral-100 hover:bg-neutral-200 px-3 py-1.5 rounded-xl border border-neutral-300 text-xs transition">
                         <input
                           type="checkbox"
                           checked={statementData.sectionI.I6_noFlowersRequested}
@@ -1256,89 +1310,404 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                           }}
                           className="rounded text-neutral-900"
                         />
-                        <span className="font-bold text-neutral-800">No Flowers Requested (In Lieu of Flowers)</span>
+                        <span className="font-bold text-neutral-800">No Flowers (In Lieu of Flowers)</span>
                       </label>
-                      <span className="text-xs font-mono font-bold text-[#991b1b]">
-                        Total Flowers: ${statementData.sectionI.I6_totalFlowersAmount.toFixed(2)}
-                      </span>
+                      <div className="px-3 py-1 bg-rose-50 border border-rose-200 rounded-xl">
+                        <span className="text-xs font-mono font-bold text-[#991b1b]">
+                          Total Floral: ${(statementData.sectionI.I6_totalFlowersAmount || 0).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   {!statementData.sectionI.I6_noFlowersRequested && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       
-                      {/* Active Flower List */}
-                      <div className="border border-neutral-200 rounded-2xl overflow-hidden">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-neutral-100 border-b border-neutral-200 text-neutral-700 font-bold">
-                            <tr>
-                              <th className="p-3">Arrangement Description</th>
-                              <th className="p-3 text-center">Type</th>
-                              <th className="p-3 text-center">Qty</th>
-                              <th className="p-3 text-right">Unit Price</th>
-                              <th className="p-3 text-right">Total</th>
-                              <th className="p-3 text-center">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-neutral-100">
-                            {(statementData.sectionI.I6_flowerItems || []).map((f) => (
-                              <tr key={f.id} className="hover:bg-neutral-50">
-                                <td className="p-3 font-semibold text-neutral-900">{f.description}</td>
-                                <td className="p-3 text-center font-mono uppercase text-[10px] text-neutral-500">{f.type.replace(/_/g, ' ')}</td>
-                                <td className="p-3 text-center font-mono font-bold">{f.quantity}</td>
-                                <td className="p-3 text-right font-mono">${f.unitPrice.toFixed(2)}</td>
-                                <td className="p-3 text-right font-mono font-bold text-[#991b1b]">${(f.quantity * f.unitPrice).toFixed(2)}</td>
-                                <td className="p-3 text-center">
+                      {/* BFH Floral Arrangement Selector Box */}
+                      <div className="bg-gradient-to-br from-amber-50/50 via-white to-neutral-50 p-5 rounded-2xl border-2 border-amber-300/70 shadow-xs space-y-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200/80 pb-3">
+                          <div className="flex items-center space-x-2">
+                            <span className="px-2.5 py-0.5 bg-amber-200/70 text-amber-900 border border-amber-300 rounded-md text-[11px] font-bold uppercase tracking-wider">
+                              BFH Florist Studio
+                            </span>
+                            <span className="text-xs font-bold text-neutral-800">
+                              Official BFH Floral Catalog (24 Handcrafted Designs)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setShowVisualFloralGallery(!showVisualFloralGallery)}
+                            className="inline-flex items-center space-x-1 px-3 py-1 bg-white hover:bg-neutral-100 border border-neutral-300 text-neutral-700 rounded-lg text-xs font-semibold transition cursor-pointer"
+                          >
+                            <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{showVisualFloralGallery ? 'Hide Photo Gallery' : 'Browse Visual Photo Gallery (24)'}</span>
+                          </button>
+                        </div>
+
+                        {/* Interactive Photo Gallery Drawer */}
+                        {showVisualFloralGallery && (
+                          <div className="bg-white p-4 rounded-xl border border-amber-200 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                                <span>Click any arrangement below to configure size &amp; add to contract:</span>
+                              </span>
+                              <span className="text-[11px] text-neutral-500 font-mono">24 Floral Items</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 max-h-72 overflow-y-auto p-1">
+                              {BFH_FLORAL_CATALOG.map((item) => {
+                                const isSelected = selectedFloralCode === item.code;
+                                return (
                                   <button
-                                    onClick={() => handleRemoveFlower(f.id)}
-                                    className="p-1 text-neutral-400 hover:text-red-700"
+                                    key={item.code}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedFloralCode(item.code);
+                                      if (selectedFloralCategory !== 'all' && selectedFloralCategory !== item.category) {
+                                        setSelectedFloralCategory('all');
+                                      }
+                                    }}
+                                    className={`p-2 rounded-xl border text-left transition relative group overflow-hidden cursor-pointer ${
+                                      isSelected 
+                                        ? 'border-[#991b1b] bg-rose-50/50 ring-2 ring-[#991b1b]/20 shadow-sm' 
+                                        : 'border-neutral-200 bg-neutral-50 hover:border-amber-400 hover:bg-white'
+                                    }`}
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <div className="aspect-square w-full rounded-lg overflow-hidden bg-neutral-100 mb-1.5 relative">
+                                      <img
+                                        src={item.imageUrl}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      />
+                                      <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/75 text-white text-[9px] font-mono rounded">
+                                        {item.code}
+                                      </span>
+                                    </div>
+                                    <div className="text-[10px] font-bold text-neutral-900 truncate leading-tight">
+                                      {item.name}
+                                    </div>
+                                    <div className="text-[10px] font-mono text-[#991b1b] font-bold mt-0.5">
+                                      ${item.pricing.small} — ${item.pricing.large}
+                                    </div>
                                   </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Dropdown Filters & Size Selector Grid */}
+                        {(() => {
+                          const activeProduct = getFloralByCode(selectedFloralCode) || BFH_FLORAL_CATALOG[0];
+                          const filteredCatalog = selectedFloralCategory === 'all'
+                            ? BFH_FLORAL_CATALOG
+                            : BFH_FLORAL_CATALOG.filter(f => f.category === selectedFloralCategory);
+                          const currentUnitPrice = activeProduct.pricing[selectedFloralSize] || 350;
+                          const currentTotal = currentUnitPrice * selectedFloralQty;
+
+                          return (
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                              {/* Left Controls */}
+                              <div className="lg:col-span-7 space-y-3.5 text-xs">
+                                
+                                {/* 1. Category Dropdown */}
+                                <div>
+                                  <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                    <Layers className="w-3.5 h-3.5 text-amber-600" />
+                                    <span>1. Select Floral Category:</span>
+                                  </label>
+                                  <select
+                                    value={selectedFloralCategory}
+                                    onChange={(e) => {
+                                      const newCat = e.target.value as FloralCategory | 'all';
+                                      setSelectedFloralCategory(newCat);
+                                      if (newCat !== 'all') {
+                                        const inCat = BFH_FLORAL_CATALOG.filter(f => f.category === newCat);
+                                        if (inCat.length > 0 && !inCat.some(f => f.code === selectedFloralCode)) {
+                                          setSelectedFloralCode(inCat[0].code);
+                                        }
+                                      }
+                                    }}
+                                    className="w-full p-2.5 bg-white border border-neutral-300 rounded-xl text-xs font-semibold text-neutral-900 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+                                  >
+                                    {BFH_FLORAL_CATEGORIES.map(c => (
+                                      <option key={c.id} value={c.id}>{c.label}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {/* 2. Arrangement Dropdown */}
+                                <div>
+                                  <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                    <Tag className="w-3.5 h-3.5 text-amber-600" />
+                                    <span>2. Select Floral Arrangement ({filteredCatalog.length} available):</span>
+                                  </label>
+                                  <select
+                                    value={selectedFloralCode}
+                                    onChange={(e) => setSelectedFloralCode(e.target.value)}
+                                    className="w-full p-2.5 bg-white border border-neutral-300 rounded-xl text-xs font-semibold text-neutral-900 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none"
+                                  >
+                                    {filteredCatalog.map(item => (
+                                      <option key={item.code} value={item.code}>
+                                        [{item.code}] {item.name} — ({item.categoryLabel})
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {/* 3. Size Selection (Generates Price) */}
+                                <div>
+                                  <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                                    <span>3. Select Size (Creates Total Price):</span>
+                                    <span className="text-[10px] text-neutral-500 font-normal">Pricing based on BFH Florist scale</span>
+                                  </label>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {(['small', 'medium', 'large'] as FloralSize[]).map((sizeKey) => {
+                                      const price = activeProduct.pricing[sizeKey];
+                                      const dim = activeProduct.dimensions[sizeKey];
+                                      const isSelected = selectedFloralSize === sizeKey;
+                                      return (
+                                        <button
+                                          key={sizeKey}
+                                          type="button"
+                                          onClick={() => setSelectedFloralSize(sizeKey)}
+                                          className={`p-2.5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-between ${
+                                            isSelected
+                                              ? 'border-[#991b1b] bg-rose-50 text-[#991b1b] ring-2 ring-[#991b1b]/20 font-bold shadow-xs'
+                                              : 'border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700'
+                                          }`}
+                                        >
+                                          <span className="text-xs uppercase tracking-wider">{sizeKey}</span>
+                                          <span className="text-sm font-mono font-bold mt-1 text-[#991b1b]">${price.toFixed(2)}</span>
+                                          <span className="text-[10px] text-neutral-500 mt-0.5 line-clamp-1">{dim}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                {/* 4. Ribbon / Banner Sash Text & Quantity */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div className="sm:col-span-2">
+                                    <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1">
+                                      Ribbon / Sash Text (Optional):
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={selectedFloralRibbon}
+                                      onChange={(e) => setSelectedFloralRibbon(e.target.value)}
+                                      placeholder="e.g. Loving Family, Beloved Mother, Forever in Our Hearts"
+                                      className="w-full p-2.5 bg-white border border-neutral-300 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-400"
+                                    />
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                      {['Loving Family', 'Beloved Mother', 'Beloved Father', 'To Our Beloved Papa', 'Forever in Our Hearts'].map((phrase) => (
+                                        <button
+                                          key={phrase}
+                                          type="button"
+                                          onClick={() => setSelectedFloralRibbon(phrase)}
+                                          className="text-[10px] px-2 py-0.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 rounded-md transition cursor-pointer"
+                                        >
+                                          + {phrase}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1">
+                                      Quantity:
+                                    </label>
+                                    <div className="flex items-center space-x-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => setSelectedFloralQty(Math.max(1, selectedFloralQty - 1))}
+                                        className="w-8 h-9 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-lg font-bold text-sm flex items-center justify-center cursor-pointer"
+                                      >
+                                        -
+                                      </button>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={selectedFloralQty}
+                                        onChange={(e) => setSelectedFloralQty(Math.max(1, parseInt(e.target.value) || 1))}
+                                        className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs font-mono font-bold text-center"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => setSelectedFloralQty(selectedFloralQty + 1)}
+                                        className="w-8 h-9 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-lg font-bold text-sm flex items-center justify-center cursor-pointer"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+
+                              </div>
+
+                              {/* Right Live Preview Card (Matching Director & Family Expectation) */}
+                              <div className="lg:col-span-5 bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
+                                      Visual Order Verification
+                                    </span>
+                                    <span className="font-mono text-[11px] font-bold text-neutral-600">
+                                      {activeProduct.code}
+                                    </span>
+                                  </div>
+
+                                  {/* Small Image Preview That Follows The Order */}
+                                  <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200 mb-3 shadow-inner">
+                                    <img
+                                      src={activeProduct.imageUrl}
+                                      alt={activeProduct.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-neutral-900/80 backdrop-blur-md text-amber-300 text-[10px] font-mono font-bold rounded-md">
+                                      {activeProduct.categoryLabel}
+                                    </div>
+                                    {selectedFloralRibbon.trim() && (
+                                      <div className="absolute bottom-2 left-2 right-2 bg-[#991b1b]/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-md text-[10px] font-bold text-center truncate shadow-md border border-amber-300/40">
+                                        🎗️ Ribbon Sash: &quot;{selectedFloralRibbon.trim()}&quot;
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <h5 className="font-bold text-neutral-900 text-xs line-clamp-1">{activeProduct.name}</h5>
+                                  <p className="text-[11px] text-neutral-500 line-clamp-2 mt-0.5">{activeProduct.description}</p>
+                                  
+                                  <div className="mt-3 pt-2 border-t border-neutral-100 flex items-center justify-between text-xs">
+                                    <span className="text-neutral-500 font-medium">
+                                      Size: <strong className="text-neutral-800 uppercase">{selectedFloralSize}</strong> ({activeProduct.dimensions[selectedFloralSize]})
+                                    </span>
+                                    <span className="font-mono text-neutral-600">
+                                      ${currentUnitPrice.toFixed(2)} &times; {selectedFloralQty}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="mt-4 pt-3 border-t border-neutral-200">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <span className="text-xs font-bold text-neutral-700">Total Item Price:</span>
+                                    <span className="text-base font-mono font-bold text-[#991b1b]">
+                                      ${currentTotal.toFixed(2)}
+                                    </span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={handleAddBFHFloral}
+                                    className="w-full py-2.5 px-4 bg-gradient-to-r from-[#991b1b] to-red-800 hover:from-red-800 hover:to-[#991b1b] text-white font-bold rounded-xl text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                    <span>Add Floral Tribute to Contract</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
-                      {/* Quick Add Flower Catalog Presets */}
-                      <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200 space-y-2 text-xs">
-                        <span className="font-bold text-neutral-700 block">Quick Add from BFH Floral Catalog:</span>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {CATALOG_FLOWERS.map((fl, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => {
-                                const newFlower: FloralArrangementItem = {
-                                  id: `fl-${Date.now()}-${idx}`,
-                                  type: fl.type,
-                                  description: fl.description,
-                                  quantity: 1,
-                                  unitPrice: fl.price,
-                                  totalAmount: fl.price
-                                };
-                                const updated = { ...statementData };
-                                updated.sectionI.I6_flowersSelected = true;
-                                updated.sectionI.I6_flowerItems = [...(updated.sectionI.I6_flowerItems || []), newFlower];
-                                setStatementData(calculateAP47Totals(updated));
-                                showToast(`💐 Added ${fl.description}`);
-                              }}
-                              className="p-2 rounded-xl bg-white border border-neutral-200 hover:border-[#991b1b] text-left transition"
-                            >
-                              <div className="font-bold text-neutral-900 text-[11px] truncate">{fl.description}</div>
-                              <div className="text-xs font-mono font-bold text-[#991b1b] mt-0.5">${fl.price.toFixed(2)}</div>
-                            </button>
-                          ))}
+                      {/* Active Flower List with Image Thumbnails */}
+                      <div className="border border-neutral-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+                        <div className="p-3 bg-neutral-100 border-b border-neutral-200 flex items-center justify-between">
+                          <span className="font-bold text-xs text-neutral-800 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Included Floral Tribute Schedule ({(statementData.sectionI.I6_flowerItems || []).length} items):</span>
+                          </span>
+                          <span className="text-xs font-mono font-bold text-[#991b1b]">
+                            Total: ${(statementData.sectionI.I6_totalFlowersAmount || 0).toFixed(2)}
+                          </span>
                         </div>
+
+                        {(statementData.sectionI.I6_flowerItems || []).length === 0 ? (
+                          <div className="p-6 text-center text-xs text-neutral-400">
+                            No floral arrangements added yet. Use the BFH Florist selector above to add tributes.
+                          </div>
+                        ) : (
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-600 font-bold text-[11px]">
+                              <tr>
+                                <th className="p-3">Floral Arrangement &amp; Visual Preview</th>
+                                <th className="p-3 text-center">Type</th>
+                                <th className="p-3 text-center">Size / Sash</th>
+                                <th className="p-3 text-center">Qty</th>
+                                <th className="p-3 text-right">Unit Price</th>
+                                <th className="p-3 text-right">Total</th>
+                                <th className="p-3 text-center">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-100">
+                              {(statementData.sectionI.I6_flowerItems || []).map((f) => (
+                                <tr key={f.id} className="hover:bg-neutral-50/80 transition">
+                                  <td className="p-3">
+                                    <div className="flex items-center space-x-3">
+                                      {f.imageUrl ? (
+                                        <img
+                                          src={f.imageUrl}
+                                          alt={f.description}
+                                          className="w-12 h-12 rounded-lg object-cover border border-neutral-200 shrink-0 shadow-xs"
+                                        />
+                                      ) : (
+                                        <div className="w-12 h-12 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-800 shrink-0">
+                                          💐
+                                        </div>
+                                      )}
+                                      <div>
+                                        <div className="font-semibold text-neutral-900 text-xs">
+                                          {f.name || f.description}
+                                        </div>
+                                        {f.code && (
+                                          <span className="inline-block mt-0.5 px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded font-mono text-[10px] font-bold">
+                                            {f.code}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="p-3 text-center font-mono uppercase text-[10px] text-neutral-500">
+                                    {f.type.replace(/_/g, ' ')}
+                                  </td>
+                                  <td className="p-3 text-center text-[11px]">
+                                    {f.size && (
+                                      <span className="px-2 py-0.5 bg-neutral-100 text-neutral-800 rounded font-bold uppercase text-[10px] block mb-0.5">
+                                        {f.size}
+                                      </span>
+                                    )}
+                                    {f.ribbonText ? (
+                                      <span className="text-rose-700 italic text-[10px] block">
+                                        &quot;{f.ribbonText}&quot;
+                                      </span>
+                                    ) : (
+                                      <span className="text-neutral-400 text-[10px]">No sash</span>
+                                    )}
+                                  </td>
+                                  <td className="p-3 text-center font-mono font-bold">{f.quantity}</td>
+                                  <td className="p-3 text-right font-mono">${f.unitPrice.toFixed(2)}</td>
+                                  <td className="p-3 text-right font-mono font-bold text-[#991b1b]">${(f.quantity * f.unitPrice).toFixed(2)}</td>
+                                  <td className="p-3 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveFlower(f.id)}
+                                      className="p-1.5 text-neutral-400 hover:text-red-700 transition cursor-pointer"
+                                      title="Remove floral item"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
                       </div>
 
                       {/* Custom Flower Manual Entry */}
                       <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200 space-y-3 text-xs">
                         <span className="font-bold text-neutral-800 block flex items-center gap-1.5">
                           <Plus className="w-4 h-4 text-[#991b1b]" />
-                          <span>Custom Flower Arrangement Entry:</span>
+                          <span>Custom / Special Florist Arrangement Entry (Off-Catalog):</span>
                         </span>
                         <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                           <div>
@@ -1391,7 +1760,7 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                         <button
                           type="button"
                           onClick={handleAddCustomFlower}
-                          className="px-4 py-2 bg-[#991b1b] hover:bg-red-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
+                          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
                         >
                           + Add Custom Floral Piece
                         </button>
@@ -1401,6 +1770,7 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                   )}
                 </div>
               )}
+
 
               {/* 3.D PRINTING & STATIONERY MATRIX */}
               {activeVariablesCategory === 'stationery' && (

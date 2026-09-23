@@ -209,10 +209,42 @@ export const PrintableFormAP47Modal: React.FC<PrintableFormAP47ModalProps> = ({
                 )}
                 {sog.sectionI.I6_totalFlowersAmount > 0 && (
                   <tr>
-                    <td className="py-1.5">I6. Custom Floral Tributes (Casket Spray, Standing Sprays)</td>
-                    <td className="py-1.5 text-right font-mono">${sog.sectionI.I6_totalFlowersAmount.toFixed(2)}</td>
+                    <td className="py-2" colSpan={2}>
+                      <div className="flex justify-between font-semibold border-b border-neutral-200 pb-1">
+                        <span>I6. Floral Arrangements &amp; Custom Tributes (Benta&apos;s Florist Collection):</span>
+                        <span className="font-mono font-bold">${sog.sectionI.I6_totalFlowersAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="pt-1.5 space-y-1.5 pl-3">
+                        {(sog.sectionI.I6_flowerItems || []).map((f) => (
+                          <div key={f.id} className="flex items-center justify-between text-[11px] text-neutral-700 bg-neutral-50/70 p-1.5 rounded border border-neutral-200/60">
+                            <div className="flex items-center space-x-2">
+                              {f.imageUrl && (
+                                <img
+                                  src={f.imageUrl}
+                                  alt={f.description}
+                                  className="w-8 h-8 rounded object-cover border border-neutral-300 shrink-0"
+                                />
+                              )}
+                              <div>
+                                <span className="font-semibold text-neutral-900">
+                                  {f.code ? `[${f.code}] ` : ''}{f.name || f.description}
+                                </span>
+                                <div className="text-[10px] text-neutral-500">
+                                  {f.size && <span className="uppercase font-bold text-neutral-700">{f.size}</span>}
+                                  {f.ribbonText && <span className="text-[#991b1b] italic ml-1.5 font-medium">&quot;{f.ribbonText}&quot;</span>}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right font-mono font-medium">
+                              {f.quantity} &times; ${f.unitPrice.toFixed(2)} = ${(f.quantity * f.unitPrice).toFixed(2)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
                   </tr>
                 )}
+
               </tbody>
               <tfoot>
                 <tr className="font-bold border-t-2 border-neutral-900">

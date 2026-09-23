@@ -812,12 +812,18 @@ export interface LovedOneBiographyInterview {
 
 export interface FloralArrangementItem {
   id: string;
-  type: 'casket_spray' | 'standing_spray' | 'heart_wreath' | 'church_basket' | 'boutonniere_corsage' | 'cross_wreath' | 'family_urn_surround' | 'custom';
+  type: 'casket_spray' | 'standing_spray' | 'heart_wreath' | 'church_basket' | 'boutonniere_corsage' | 'cross_wreath' | 'family_urn_surround' | 'wreath' | 'basket' | 'custom';
+  code?: string;
+  name?: string;
+  size?: 'small' | 'medium' | 'large' | 'standard';
+  ribbonText?: string;
+  imageUrl?: string;
   description: string;
   quantity: number;
   unitPrice: number;
   totalAmount: number;
 }
+
 
 export interface CustomLiveryVehicleItem {
   id: string;

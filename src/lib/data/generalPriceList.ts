@@ -531,21 +531,32 @@ export const getDefaultStatementOfGoodsForCase = (c: GoldenRecordCase): Statemen
   const defaultFloralItems: FloralArrangementItem[] = [
     {
       id: 'fl-1',
+      code: 'BFH-CC-005',
+      name: 'Spring Pastel Garden Casket Spray',
       type: 'casket_spray',
-      description: 'Presidential Full Casket Spray (Red Roses, White Lilies & Gold Satin Ribbons)',
+      size: 'medium',
+      ribbonText: 'Loving Family',
+      imageUrl: '/images/florals/bfh_cc_005.jpg',
+      description: 'BFH-CC-005 - Spring Pastel Garden Casket Spray (MEDIUM • Sash: "Loving Family")',
       quantity: 1,
-      unitPrice: 450.00,
-      totalAmount: 450.00
+      unitPrice: 350.00,
+      totalAmount: 350.00
     },
     {
       id: 'fl-2',
+      code: 'BFH-CC-001',
+      name: 'Patriotic Tricolor Standing Wreath',
       type: 'standing_spray',
-      description: 'Harlem Sanctuary Standing Easel Spray (Hydrangeas & Gladiolus)',
+      size: 'medium',
+      ribbonText: 'Beloved Papa',
+      imageUrl: '/images/florals/bfh_cc_001.jpg',
+      description: 'BFH-CC-001 - Patriotic Tricolor Standing Wreath (MEDIUM • Sash: "Beloved Papa")',
       quantity: 2,
-      unitPrice: 275.00,
-      totalAmount: 550.00
+      unitPrice: 325.00,
+      totalAmount: 650.00
     }
   ];
+
 
   const rawData: StatementOfGoodsData = {
     id: `sog-${c.id}`,

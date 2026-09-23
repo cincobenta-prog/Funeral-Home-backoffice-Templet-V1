@@ -1191,9 +1191,38 @@ export const GoldenRecordDetail: React.FC<GoldenRecordDetailProps> = ({
                           : `$${(caseData.statementOfGoods?.sectionI.I6_totalFlowersAmount ?? 0).toFixed(2)}`}
                       </span>
                     </div>
+
+                    {caseData.statementOfGoods?.sectionI.I6_flowerItems && caseData.statementOfGoods.sectionI.I6_flowerItems.length > 0 && !caseData.statementOfGoods.sectionI.I6_noFlowersRequested && (
+                      <div className="pt-2 mt-2 border-t border-neutral-100">
+                        <span className="text-[11px] font-bold text-neutral-800 block mb-2">Ordered Floral Tributes ({caseData.statementOfGoods.sectionI.I6_flowerItems.length}):</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {caseData.statementOfGoods.sectionI.I6_flowerItems.map((fl) => (
+                            <div key={fl.id} className="flex items-center space-x-2.5 p-2 rounded-xl bg-neutral-50 border border-neutral-200">
+                              {fl.imageUrl ? (
+                                <img src={fl.imageUrl} alt={fl.description} className="w-10 h-10 rounded-lg object-cover border border-neutral-300 shrink-0 shadow-xs" />
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">💐</div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-bold text-neutral-900 truncate">{fl.name || fl.description}</div>
+                                <div className="text-[10px] text-neutral-500 flex items-center gap-1.5 flex-wrap">
+                                  {fl.code && <span className="font-mono bg-amber-100 text-amber-900 px-1 rounded font-bold">{fl.code}</span>}
+                                  {fl.size && <span className="uppercase font-semibold text-neutral-700">{fl.size}</span>}
+                                  {fl.ribbonText && <span className="italic text-[#991b1b]">&quot;{fl.ribbonText}&quot;</span>}
+                                </div>
+                              </div>
+                              <div className="text-xs font-mono font-bold text-[#991b1b] text-right shrink-0">
+                                ${(fl.quantity * fl.unitPrice).toFixed(2)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+
 
               {/* Service Partner Dispatches & Two-Way Carrier Confirmation Center */}
               <div className="bg-white p-5 rounded-2xl border-2 border-amber-300/80 shadow-xs space-y-4">

@@ -2941,11 +2941,67 @@ ${obitState.serviceDetails} ${obitState.memorialDonations}`;
                       : `$${(activeCase.statementOfGoods?.sectionI.I6_totalFlowersAmount ?? 0).toFixed(2)}`}
                   </span>
                 </div>
+
+                {activeCase.statementOfGoods?.sectionI.I6_flowerItems && activeCase.statementOfGoods.sectionI.I6_flowerItems.length > 0 && !activeCase.statementOfGoods.sectionI.I6_noFlowersRequested && (
+                  <div className="py-2.5 px-3 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-2 my-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-neutral-900 flex items-center gap-1.5">
+                        <span>💐</span>
+                        <span>Selected Floral Tributes &amp; Sprays:</span>
+                      </span>
+                      <span className="text-[11px] text-neutral-500 font-serif-title italic">Handcrafted by Benta&apos;s Florist</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {activeCase.statementOfGoods.sectionI.I6_flowerItems.map((fl) => (
+                        <div key={fl.id} className="flex items-center space-x-3 p-2 bg-white rounded-xl border border-rose-200/80 shadow-xs">
+                          {fl.imageUrl ? (
+                            <img
+                              src={fl.imageUrl}
+                              alt={fl.description}
+                              className="w-12 h-12 rounded-lg object-cover border border-neutral-200 shrink-0 shadow-2xs"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">
+                              💐
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold text-neutral-900 truncate">
+                              {fl.name || fl.description}
+                            </div>
+                            <div className="text-[10px] text-neutral-500 flex items-center gap-1.5 flex-wrap mt-0.5">
+                              {fl.code && (
+                                <span className="font-mono bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-bold">
+                                  {fl.code}
+                                </span>
+                              )}
+                              {fl.size && (
+                                <span className="uppercase font-bold text-neutral-700">
+                                  {fl.size}
+                                </span>
+                              )}
+                              {fl.ribbonText && (
+                                <span className="italic text-[#991b1b] font-medium">
+                                  &quot;{fl.ribbonText}&quot;
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] font-mono font-bold text-[#991b1b] mt-0.5">
+                              {fl.quantity} &times; ${fl.unitPrice.toFixed(2)} = ${(fl.quantity * fl.unitPrice).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex justify-between py-1 text-neutral-600">
                   <span>Pass-Through Cash Advances (Cemetery, NYC DOH Transcripts, Clergy):</span>
                   <span className="font-mono text-amber-800 font-semibold">${(activeCase.statementOfGoods?.sectionIII.cashAdvancesTotal ?? 0).toFixed(2)}</span>
                 </div>
               </div>
+
 
               <div className="p-3 bg-neutral-50 rounded-xl text-[11px] text-neutral-500 font-light flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
