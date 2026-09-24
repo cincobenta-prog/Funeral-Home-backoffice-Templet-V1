@@ -16,6 +16,13 @@ import {
   CASKET_MANUFACTURER_CATALOGS,
   TRI_STATE_CEMETERIES_DIRECTORY
 } from '../../lib/data/partnerCatalogs';
+import {
+  ALL_UNIFIED_MERCHANDISE,
+  BATESVILLE_CASKETS,
+  MILSO_CASKETS,
+  ManufacturerFilter,
+  searchMerchandise
+} from '../../lib/data/casketCatalog';
 import { 
   Users, 
   Scissors, 
@@ -79,6 +86,8 @@ export const ServicePartnerNetworkManager: React.FC<ServicePartnerNetworkManager
   >('directory');
   const [categoryFilter, setCategoryFilter] = useState<'all' | PartnerCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [partnerCasketFilter, setPartnerCasketFilter] = useState<ManufacturerFilter>('all');
+  const [partnerCasketCategory, setPartnerCasketCategory] = useState<string>('all');
   
   // Modals
   const [isAddPartnerModalOpen, setIsAddPartnerModalOpen] = useState(false);
@@ -1114,56 +1123,158 @@ Gregory Hall,Licensed Trade Funeral Director,outside_director,(917) 555-6623,gha
             <div className="space-y-1">
               <h3 className="font-serif-title text-lg font-bold text-neutral-900 flex items-center gap-2">
                 <Layers className="w-5 h-5 text-[#991b1b]" />
-                Casket Manufacturers & Product Catalogs
+                Official Casket & Merchandise Catalogs
               </h3>
               <p className="text-xs text-neutral-600 font-light">
-                Official offerings from <strong>Batesville Casket Company</strong> & <strong>Matthews Aurora / Milso Casket Company</strong>.
+                Complete retail schedules and merchandise inventory for <strong>Batesville Casket Company</strong> (606 items) and <strong>Milso Industry</strong> (332 items).
               </p>
             </div>
-            <span className="text-xs bg-red-50 text-[#991b1b] border border-red-200 px-3 py-1 rounded-xl font-bold font-mono">
-              {CASKET_MANUFACTURER_CATALOGS.length} Casket Lines Cataloged
-            </span>
+            
+            <div className="flex items-center space-x-2">
+              <div className="inline-flex rounded-xl border border-neutral-200 bg-neutral-100 p-1 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setPartnerCasketFilter('all')}
+                  className={`px-3 py-1 rounded-lg transition ${
+                    partnerCasketFilter === 'all'
+                      ? 'bg-white text-neutral-900 shadow-xs font-bold'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  All ({ALL_UNIFIED_MERCHANDISE.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPartnerCasketFilter('batesville')}
+                  className={`px-3 py-1 rounded-lg transition ${
+                    partnerCasketFilter === 'batesville'
+                      ? 'bg-[#991b1b] text-white shadow-xs font-bold'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  Batesville ({BATESVILLE_CASKETS.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPartnerCasketFilter('milso')}
+                  className={`px-3 py-1 rounded-lg transition ${
+                    partnerCasketFilter === 'milso'
+                      ? 'bg-[#15803d] text-white shadow-xs font-bold'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  Milso ({MILSO_CASKETS.length})
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {CASKET_MANUFACTURER_CATALOGS.filter(c => {
-              if (!searchQuery.trim()) return true;
-              const q = searchQuery.toLowerCase();
-              return c.name.toLowerCase().includes(q) || c.manufacturer.toLowerCase().includes(q) || c.materialType.toLowerCase().includes(q);
-            }).map((cask) => (
-              <div key={cask.id} className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-sm space-y-3 hover:border-[#991b1b] transition flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
-                      {cask.manufacturer}
-                    </span>
-                    <span className="text-sm font-bold text-[#991b1b] font-mono">
-                      ${cask.gplRetailPrice.toLocaleString()}.00
-                    </span>
-                  </div>
+          {/* Search and Material Filter Bar */}
+          <div className="bg-white p-3.5 rounded-2xl border border-neutral-200 shadow-2xs grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div className="sm:col-span-8 relative">
+              <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+              <input
+                type="text"
+                placeholder="Search catalog by Item #, model name, material, exterior finish, interior lining..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-300 rounded-xl text-xs placeholder:text-neutral-400 focus:bg-white focus:ring-1 focus:ring-[#991b1b]"
+              />
+            </div>
+            <div className="sm:col-span-4">
+              <select
+                value={partnerCasketCategory}
+                onChange={(e) => setPartnerCasketCategory(e.target.value)}
+                className="w-full py-2 px-3 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-medium text-neutral-800"
+              >
+                <option value="all">All Material Categories</option>
+                <option value="bronze">Bronze & Copper</option>
+                <option value="stainless">Stainless Steel</option>
+                <option value="steel">16, 18 & 20 Gauge Steel</option>
+                <option value="wood">Hardwoods (Cherry, Oak, Maple, Poplar, Pine, Pecan, Mahogany)</option>
+                <option value="cloth">Cloth & Alternative</option>
+                <option value="urn">Urns & Keepsakes</option>
+              </select>
+            </div>
+          </div>
 
-                  <div>
-                    <h4 className="font-serif-title font-bold text-sm text-neutral-900">{cask.name}</h4>
-                    <p className="text-xs text-neutral-500 font-medium">{cask.materialDescription}</p>
-                  </div>
+          {/* Product Cards Grid */}
+          {(() => {
+            let filtered = searchMerchandise(searchQuery, partnerCasketFilter, 'all');
+            if (partnerCasketCategory !== 'all') {
+              filtered = filtered.filter(item => {
+                const c = (item.category + ' ' + item.material).toLowerCase();
+                if (partnerCasketCategory === 'bronze') return c.includes('bronze') || c.includes('copper');
+                if (partnerCasketCategory === 'stainless') return c.includes('stainless') || c.includes('onyx') || c.includes('sapphire');
+                if (partnerCasketCategory === 'steel') return c.includes('gauge') || c.includes('steel') || c.includes('gemini') || c.includes('apollo') || c.includes('aries') || c.includes('spectra') || c.includes('hercules') || c.includes('pisces');
+                if (partnerCasketCategory === 'wood') return c.includes('cherry') || c.includes('oak') || c.includes('maple') || c.includes('poplar') || c.includes('pine') || c.includes('pecan') || c.includes('mahogany') || c.includes('wood') || c.includes('hardwood') || c.includes('veneer');
+                if (partnerCasketCategory === 'cloth') return c.includes('cloth') || c.includes('doeskin') || c.includes('cardboard') || c.includes('alternative') || c.includes('unfinished');
+                if (partnerCasketCategory === 'urn') return item.productType === 'urn_keepsake' || c.includes('urn') || c.includes('keepsake');
+                return true;
+              });
+            }
 
-                  <div className="p-2 bg-neutral-50 rounded-xl border border-neutral-200 space-y-1 text-[11px] text-neutral-700">
-                    <div><strong>Exterior:</strong> {cask.exteriorColor}</div>
-                    <div><strong>Interior:</strong> {cask.interiorColor} ({cask.interiorFabric})</div>
-                    <div><strong>Gasket:</strong> {cask.gasketType}</div>
-                  </div>
+            const displayList = filtered.slice(0, 48);
+
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-neutral-500 px-1">
+                  <span>Showing <strong>{displayList.length}</strong> of <strong>{filtered.length}</strong> catalog items</span>
+                  <span className="font-mono text-[11px] bg-neutral-100 px-2 py-0.5 rounded-md">Batesville: Item #, Desc, Proposed Display Price | Milso: Item Name, Current Price</span>
                 </div>
 
-                <div className="pt-2 border-t border-neutral-100 space-y-1">
-                  <div className="text-[10px] text-neutral-500 flex flex-wrap gap-1">
-                    {cask.features.map((f, i) => (
-                      <span key={i} className="bg-neutral-100 px-1.5 py-0.5 rounded">✓ {f}</span>
-                    ))}
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {displayList.map((item) => (
+                    <div key={item.id} className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-2xs space-y-3 hover:border-[#991b1b] transition flex flex-col justify-between">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                            item.supplier === 'Batesville Casket Company'
+                              ? 'bg-red-50 text-[#991b1b] border-red-200'
+                              : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          }`}>
+                            {item.supplier}
+                          </span>
+                          <span className="text-sm font-bold text-[#991b1b] font-mono">
+                            ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="text-[11px] text-neutral-400 font-mono">
+                            Item Code: #{item.modelCodeOrNumber}
+                          </div>
+                          <h4 className="font-serif-title font-bold text-sm text-neutral-900 line-clamp-1">
+                            {item.supplier === 'Milso Industry' 
+                              ? item.nameOrDescription 
+                              : `[#${item.modelCodeOrNumber}] ${item.nameOrDescription}`}
+                          </h4>
+                          <p className="text-xs text-neutral-600 font-medium">{item.material}</p>
+                        </div>
+
+                        <div className="p-2.5 bg-neutral-50 rounded-xl border border-neutral-200 space-y-1 text-[11px] text-neutral-700">
+                          <div><strong>Category:</strong> {item.category}</div>
+                          <div><strong>Interior:</strong> {item.interior}</div>
+                          {item.availability && (
+                            <div><strong>Availability:</strong> <span className="font-semibold">{item.availability}</span></div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px]">
+                        <span className="text-neutral-500 font-medium">
+                          {item.supplier === 'Milso Industry' ? 'Milso Wholesale Tier' : 'Batesville Master Worksheet'}
+                        </span>
+                        <span className="font-mono font-bold text-[#991b1b]">
+                          ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </div>
       )}
 

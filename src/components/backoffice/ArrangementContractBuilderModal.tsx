@@ -8,11 +8,17 @@ import {
 } from '../../lib/types/funeral';
 import { 
   BFH_GPL_2026, 
-  CATALOG_CASKETS, 
   CATALOG_VAULTS, 
   calculateAP47Totals, 
   getDefaultStatementOfGoodsForCase 
 } from '../../lib/data/generalPriceList';
+import {
+  ALL_UNIFIED_MERCHANDISE,
+  BATESVILLE_CASKETS,
+  MILSO_CASKETS,
+  ManufacturerFilter,
+  searchMerchandise
+} from '../../lib/data/casketCatalog';
 import {
   BFH_FLORAL_CATALOG,
   BFH_FLORAL_CATEGORIES,
@@ -98,6 +104,18 @@ export const ArrangementContractBuilderModal: React.FC<ArrangementContractBuilde
   const [newCustomFlowerDesc, setNewCustomFlowerDesc] = useState('');
   const [newCustomFlowerQty, setNewCustomFlowerQty] = useState(1);
   const [newCustomFlowerPrice, setNewCustomFlowerPrice] = useState(250);
+
+  // Batesville & Milso Casket & Merchandise Selection State
+  const [casketManufacturerFilter, setCasketManufacturerFilter] = useState<ManufacturerFilter>('all');
+  const [casketSearchQuery, setCasketSearchQuery] = useState<string>('');
+  const [casketCategoryFilter, setCasketCategoryFilter] = useState<string>('all');
+  const [selectedCasketCatalogId, setSelectedCasketCatalogId] = useState<string>('');
+  const [showFullCasketGallery, setShowFullCasketGallery] = useState<boolean>(false);
+
+  // Urn & Keepsake Selection State
+  const [urnManufacturerFilter, setUrnManufacturerFilter] = useState<ManufacturerFilter>('all');
+  const [urnSearchQuery, setUrnSearchQuery] = useState<string>('');
+  const [selectedUrnCatalogId, setSelectedUrnCatalogId] = useState<string>('');
 
   const [newCashAdvDesc, setNewCashAdvDesc] = useState('');
   const [newCashAdvAmount, setNewCashAdvAmount] = useState(150);
@@ -1050,11 +1068,18 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                   {/* Casket Selection & Manual Entry */}
                   <div className="bg-neutral-50 p-5 rounded-2xl border border-neutral-200 space-y-4 text-xs">
                     <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-                      <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-1.5">
-                        <Package className="w-4 h-4 text-[#991b1b]" />
-                        <span>Casket or Alternative Container (GPL Range: $130.00 – $41,340.00)</span>
-                      </h4>
-                      <label className="flex items-center space-x-1.5 cursor-pointer">
+                      <div className="flex items-center space-x-2">
+                        <Package className="w-5 h-5 text-[#991b1b]" />
+                        <div>
+                          <h4 className="font-bold text-sm text-neutral-900 font-serif-title">
+                            Casket or Alternative Container (GPL Range: $130.00 – $41,340.00)
+                          </h4>
+                          <p className="text-[11px] text-neutral-500 font-normal">
+                            Direct integration with official catalogs for <strong>Batesville Casket Company</strong> and <strong>Milso Industry</strong>.
+                          </p>
+                        </div>
+                      </div>
+                      <label className="flex items-center space-x-1.5 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-neutral-200 shadow-2xs hover:bg-neutral-50 transition">
                         <input
                           type="checkbox"
                           checked={statementData.sectionI.H1_casketSelected}
@@ -1070,47 +1095,257 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                     </div>
 
                     {statementData.sectionI.H1_casketSelected && (
-                      <div className="space-y-3">
+                      <div className="space-y-4 pt-1">
                         
-                        {/* Quick Catalog Presets */}
-                        <div>
-                          <label className="text-[11px] font-bold text-neutral-600 block mb-1.5">
-                            Select from Standard BFH Catalog Presets:
-                          </label>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {CATALOG_CASKETS.map((c, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => {
-                                  const updated = { ...statementData };
-                                  updated.sectionI.H1_casketSupplier = c.supplier;
-                                  updated.sectionI.H1_casketModelNameOrNumber = c.model;
-                                  updated.sectionI.H1_casketMaterialSpeciesOrGauge = c.material;
-                                  updated.sectionI.H1_casketInterior = c.interior;
-                                  updated.sectionI.H1_casketAmount = c.price;
-                                  setStatementData(calculateAP47Totals(updated));
-                                }}
-                                className={`p-2.5 rounded-xl border text-left transition ${
-                                  statementData.sectionI.H1_casketModelNameOrNumber === c.model
-                                    ? 'bg-red-50 border-[#991b1b] ring-2 ring-red-400/40 shadow-xs'
-                                    : 'bg-white border-neutral-200 hover:bg-neutral-100'
-                                }`}
+                        {/* Manufacturer Filter Tabs */}
+                        <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="font-bold text-[11px] text-neutral-700">Manufacturer Catalog:</span>
+                              <div className="inline-flex rounded-lg border border-neutral-200 bg-neutral-100 p-0.5 text-[11px] font-medium">
+                                <button
+                                  type="button"
+                                  onClick={() => setCasketManufacturerFilter('all')}
+                                  className={`px-3 py-1 rounded-md transition ${
+                                    casketManufacturerFilter === 'all'
+                                      ? 'bg-white text-neutral-900 shadow-2xs font-bold'
+                                      : 'text-neutral-600 hover:text-neutral-900'
+                                  }`}
+                                >
+                                  All ({ALL_UNIFIED_MERCHANDISE.length})
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCasketManufacturerFilter('batesville')}
+                                  className={`px-3 py-1 rounded-md transition flex items-center space-x-1 ${
+                                    casketManufacturerFilter === 'batesville'
+                                      ? 'bg-[#991b1b] text-white shadow-2xs font-bold'
+                                      : 'text-neutral-600 hover:text-neutral-900'
+                                  }`}
+                                >
+                                  <span>Batesville Casket Co.</span>
+                                  <span className="text-[10px] opacity-80 font-mono">({BATESVILLE_CASKETS.length})</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCasketManufacturerFilter('milso')}
+                                  className={`px-3 py-1 rounded-md transition flex items-center space-x-1 ${
+                                    casketManufacturerFilter === 'milso'
+                                      ? 'bg-[#15803d] text-white shadow-2xs font-bold'
+                                      : 'text-neutral-600 hover:text-neutral-900'
+                                  }`}
+                                >
+                                  <span>Milso Industry</span>
+                                  <span className="text-[10px] opacity-80 font-mono">({MILSO_CASKETS.length})</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setShowFullCasketGallery(!showFullCasketGallery)}
+                              className="text-[11px] text-[#991b1b] hover:text-red-900 font-bold flex items-center space-x-1 underline"
+                            >
+                              <span>{showFullCasketGallery ? 'Collapse Catalog Cards' : 'Browse Visual Catalog Cards'}</span>
+                            </button>
+                          </div>
+
+                          {/* Search and Category Filter Controls */}
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-1">
+                            <div className="sm:col-span-7">
+                              <input
+                                type="text"
+                                placeholder="Search by item #, model name, material, finish, or interior..."
+                                value={casketSearchQuery}
+                                onChange={(e) => setCasketSearchQuery(e.target.value)}
+                                className="w-full p-2 bg-neutral-50 border border-neutral-300 rounded-lg text-xs placeholder:text-neutral-400 focus:bg-white focus:ring-1 focus:ring-[#991b1b]"
+                              />
+                            </div>
+                            <div className="sm:col-span-5">
+                              <select
+                                value={casketCategoryFilter}
+                                onChange={(e) => setCasketCategoryFilter(e.target.value)}
+                                className="w-full p-2 bg-neutral-50 border border-neutral-300 rounded-lg text-xs font-medium text-neutral-800"
                               >
-                                <div className="font-bold text-neutral-900 text-[11px]">{c.model}</div>
-                                <div className="text-[10px] text-neutral-500">{c.material} • {c.interior}</div>
-                                <div className="font-mono font-bold text-[#991b1b] text-xs mt-1">
-                                  ${c.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                <option value="all">All Material Categories</option>
+                                <option value="bronze">Bronze & Copper</option>
+                                <option value="stainless">Stainless Steel</option>
+                                <option value="steel">16, 18 & 20 Gauge Steel</option>
+                                <option value="wood">Hardwoods (Cherry, Oak, Maple, Poplar, Pine, Pecan, Mahogany)</option>
+                                <option value="cloth">Cloth & Alternative Containers</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Quick Interactive Dropdown Selector */}
+                          <div className="pt-2 border-t border-neutral-100">
+                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">
+                              Select Item to Generate Contract Price & Details:
+                            </label>
+                            {(() => {
+                              let filteredList = searchMerchandise(casketSearchQuery, casketManufacturerFilter, 'casket');
+                              if (casketCategoryFilter !== 'all') {
+                                filteredList = filteredList.filter(item => {
+                                  const c = (item.category + ' ' + item.material).toLowerCase();
+                                  if (casketCategoryFilter === 'bronze') return c.includes('bronze') || c.includes('copper');
+                                  if (casketCategoryFilter === 'stainless') return c.includes('stainless') || c.includes('onyx') || c.includes('sapphire');
+                                  if (casketCategoryFilter === 'steel') return c.includes('gauge') || c.includes('steel') || c.includes('gemini') || c.includes('apollo') || c.includes('aries') || c.includes('spectra') || c.includes('hercules') || c.includes('pisces');
+                                  if (casketCategoryFilter === 'wood') return c.includes('cherry') || c.includes('oak') || c.includes('maple') || c.includes('poplar') || c.includes('pine') || c.includes('pecan') || c.includes('mahogany') || c.includes('wood') || c.includes('hardwood') || c.includes('veneer');
+                                  if (casketCategoryFilter === 'cloth') return c.includes('cloth') || c.includes('doeskin') || c.includes('cardboard') || c.includes('alternative') || c.includes('unfinished');
+                                  return true;
+                                });
+                              }
+
+                              return (
+                                <div className="space-y-2">
+                                  <select
+                                    value={selectedCasketCatalogId}
+                                    onChange={(e) => {
+                                      const id = e.target.value;
+                                      setSelectedCasketCatalogId(id);
+                                      const found = ALL_UNIFIED_MERCHANDISE.find(m => m.id === id);
+                                      if (found) {
+                                        const updated = { ...statementData };
+                                        updated.sectionI.H1_casketSupplier = found.supplier;
+                                        updated.sectionI.H1_casketModelNameOrNumber = found.supplier === 'Batesville Casket Company' 
+                                          ? `[#${found.modelCodeOrNumber}] ${found.nameOrDescription}` 
+                                          : found.nameOrDescription;
+                                        updated.sectionI.H1_casketMaterialSpeciesOrGauge = found.material;
+                                        updated.sectionI.H1_casketInterior = found.interior;
+                                        updated.sectionI.H1_casketAmount = found.price;
+                                        setStatementData(calculateAP47Totals(updated));
+                                        showToast(`Selected: ${found.displayText}`);
+                                      }
+                                    }}
+                                    className="w-full p-2.5 bg-white border border-neutral-300 rounded-xl text-xs font-semibold text-neutral-900 focus:ring-2 focus:ring-[#991b1b] focus:border-[#991b1b]"
+                                  >
+                                    <option value="">-- Choose from Catalog ({filteredList.length} items matching filter) --</option>
+                                    {filteredList.map((item) => (
+                                      <option key={item.id} value={item.id}>
+                                        {item.supplier === 'Milso Industry'
+                                          ? `[Milso] ${item.nameOrDescription} — $${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                                          : `[Batesville] [#${item.modelCodeOrNumber}] ${item.nameOrDescription} — $${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                                      </option>
+                                    ))}
+                                  </select>
+
+                                  <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1">
+                                    <span>
+                                      <strong>Format Rule:</strong> Batesville displays <em>Item number, Product Description, Proposed Display Price</em> | Milso displays <em>Item Name, Current Price</em>
+                                    </span>
+                                    <span className="font-mono text-neutral-600">
+                                      Showing {filteredList.length} items
+                                    </span>
+                                  </div>
                                 </div>
-                              </button>
-                            ))}
+                              );
+                            })()}
                           </div>
                         </div>
 
+                        {/* Visual Catalog Grid (Collapsible or Shown) */}
+                        {showFullCasketGallery && (
+                          <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-neutral-700">Visual Catalog Selection Cards:</span>
+                              <span className="text-[10px] text-neutral-500">Click any card to load specifications & generate price</span>
+                            </div>
+
+                            {(() => {
+                              let filtered = searchMerchandise(casketSearchQuery, casketManufacturerFilter, 'casket');
+                              if (casketCategoryFilter !== 'all') {
+                                filtered = filtered.filter(item => {
+                                  const c = (item.category + ' ' + item.material).toLowerCase();
+                                  if (casketCategoryFilter === 'bronze') return c.includes('bronze') || c.includes('copper');
+                                  if (casketCategoryFilter === 'stainless') return c.includes('stainless') || c.includes('onyx') || c.includes('sapphire');
+                                  if (casketCategoryFilter === 'steel') return c.includes('gauge') || c.includes('steel') || c.includes('gemini') || c.includes('apollo') || c.includes('aries') || c.includes('spectra') || c.includes('hercules') || c.includes('pisces');
+                                  if (casketCategoryFilter === 'wood') return c.includes('cherry') || c.includes('oak') || c.includes('maple') || c.includes('poplar') || c.includes('pine') || c.includes('pecan') || c.includes('mahogany') || c.includes('wood') || c.includes('hardwood') || c.includes('veneer');
+                                  if (casketCategoryFilter === 'cloth') return c.includes('cloth') || c.includes('doeskin') || c.includes('cardboard') || c.includes('alternative') || c.includes('unfinished');
+                                  return true;
+                                });
+                              }
+
+                              const displayItems = filtered.slice(0, 16);
+
+                              return (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
+                                  {displayItems.map((item) => {
+                                    const isSelected = statementData.sectionI.H1_casketModelNameOrNumber.includes(item.nameOrDescription);
+                                    return (
+                                      <div
+                                        key={item.id}
+                                        onClick={() => {
+                                          setSelectedCasketCatalogId(item.id);
+                                          const updated = { ...statementData };
+                                          updated.sectionI.H1_casketSupplier = item.supplier;
+                                          updated.sectionI.H1_casketModelNameOrNumber = item.supplier === 'Batesville Casket Company' 
+                                            ? `[#${item.modelCodeOrNumber}] ${item.nameOrDescription}` 
+                                            : item.nameOrDescription;
+                                          updated.sectionI.H1_casketMaterialSpeciesOrGauge = item.material;
+                                          updated.sectionI.H1_casketInterior = item.interior;
+                                          updated.sectionI.H1_casketAmount = item.price;
+                                          setStatementData(calculateAP47Totals(updated));
+                                          showToast(`Generated: ${item.displayText}`);
+                                        }}
+                                        className={`p-3 rounded-xl border text-left cursor-pointer transition flex flex-col justify-between ${
+                                          isSelected
+                                            ? 'bg-red-50/80 border-[#991b1b] ring-2 ring-red-400/50 shadow-xs'
+                                            : 'bg-white border-neutral-200 hover:border-neutral-400 hover:shadow-2xs'
+                                        }`}
+                                      >
+                                        <div className="space-y-1.5">
+                                          <div className="flex items-center justify-between">
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                                              item.supplier === 'Batesville Casket Company'
+                                                ? 'bg-red-100 text-red-800'
+                                                : 'bg-emerald-100 text-emerald-800'
+                                            }`}>
+                                              {item.supplier === 'Batesville Casket Company' ? 'Batesville' : 'Milso'}
+                                            </span>
+                                            <span className="text-[10px] font-mono text-neutral-500 font-semibold">
+                                              #{item.modelCodeOrNumber}
+                                            </span>
+                                          </div>
+
+                                          <div className="font-bold text-neutral-900 text-xs line-clamp-2">
+                                            {item.nameOrDescription}
+                                          </div>
+
+                                          <div className="text-[10px] text-neutral-600 line-clamp-1">
+                                            {item.material}
+                                          </div>
+                                          <div className="text-[10px] text-neutral-500 line-clamp-1">
+                                            Interior: {item.interior}
+                                          </div>
+                                        </div>
+
+                                        <div className="pt-2 mt-2 border-t border-neutral-100 flex items-center justify-between">
+                                          <div className="font-mono font-bold text-xs text-[#991b1b]">
+                                            ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                          </div>
+                                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg transition ${
+                                            isSelected
+                                              ? 'bg-[#991b1b] text-white'
+                                              : 'bg-neutral-100 text-neutral-700 group-hover:bg-neutral-200'
+                                          }`}>
+                                            {isSelected ? '✓ In Contract' : 'Select'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+
                         {/* Editable Form AP-47 Line Items */}
-                        <div className="pt-2 border-t border-neutral-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="pt-3 border-t border-neutral-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">Supplier:</label>
+                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">
+                              Supplier / Manufacturer:
+                            </label>
                             <input
                               type="text"
                               value={statementData.sectionI.H1_casketSupplier}
@@ -1119,12 +1354,15 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                                 updated.sectionI.H1_casketSupplier = e.target.value;
                                 setStatementData(updated);
                               }}
+                              placeholder="e.g. Batesville Casket Company or Milso Industry"
                               className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs"
                             />
                           </div>
 
                           <div>
-                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">Model Name or Number:</label>
+                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">
+                              Model Name or Number:
+                            </label>
                             <input
                               type="text"
                               value={statementData.sectionI.H1_casketModelNameOrNumber}
@@ -1133,12 +1371,15 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                                 updated.sectionI.H1_casketModelNameOrNumber = e.target.value;
                                 setStatementData(updated);
                               }}
+                              placeholder="e.g. [#147792] F63 899 IDH Sapphire"
                               className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs font-semibold"
                             />
                           </div>
 
                           <div>
-                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">Material (Species of Wood / Gauge of Metal):</label>
+                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">
+                              Material (Species of Wood / Gauge of Metal / Finish):
+                            </label>
                             <input
                               type="text"
                               value={statementData.sectionI.H1_casketMaterialSpeciesOrGauge}
@@ -1147,12 +1388,15 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                                 updated.sectionI.H1_casketMaterialSpeciesOrGauge = e.target.value;
                                 setStatementData(updated);
                               }}
+                              placeholder="e.g. Solid Cherry Hardwood / 18 Gauge Steel"
                               className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs"
                             />
                           </div>
 
                           <div>
-                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">Interior Description & Lining:</label>
+                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">
+                              Interior Description & Lining:
+                            </label>
                             <input
                               type="text"
                               value={statementData.sectionI.H1_casketInterior}
@@ -1161,22 +1405,33 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                                 updated.sectionI.H1_casketInterior = e.target.value;
                                 setStatementData(updated);
                               }}
+                              placeholder="e.g. Almond Tailored Velvet / Rosetan Crepe"
                               className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs"
                             />
                           </div>
 
-                          <div className="sm:col-span-2">
-                            <label className="text-[11px] font-bold text-neutral-700 block mb-1">Casket Price ($):</label>
-                            <input
-                              type="number"
-                              value={statementData.sectionI.H1_casketAmount}
-                              onChange={(e) => {
-                                const updated = { ...statementData };
-                                updated.sectionI.H1_casketAmount = parseFloat(e.target.value) || 0;
-                                setStatementData(calculateAP47Totals(updated));
-                              }}
-                              className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs font-mono font-bold text-[#991b1b]"
-                            />
+                          <div className="sm:col-span-2 bg-red-50/50 p-3 rounded-xl border border-red-100 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <label className="text-[11px] font-bold text-neutral-900 block">
+                                Generated Contract Casket Price ($):
+                              </label>
+                              <span className="text-[10px] text-neutral-500">
+                                Automatically generated from manufacturer retail schedule (Batesville Proposed Display Price / Milso Current Price)
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-mono text-xs font-bold text-neutral-500">$</span>
+                              <input
+                                type="number"
+                                value={statementData.sectionI.H1_casketAmount}
+                                onChange={(e) => {
+                                  const updated = { ...statementData };
+                                  updated.sectionI.H1_casketAmount = parseFloat(e.target.value) || 0;
+                                  setStatementData(calculateAP47Totals(updated));
+                                }}
+                                className="w-36 p-2 bg-white border border-red-300 rounded-lg text-sm font-mono font-bold text-[#991b1b] text-right focus:ring-2 focus:ring-[#991b1b]"
+                              />
+                            </div>
                           </div>
                         </div>
 
@@ -1191,7 +1446,7 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                         <ShieldCheck className="w-4 h-4 text-[#991b1b]" />
                         <span>Outer Interment Receptacle / Vault (GPL Range: $895.00 – $14,580.00)</span>
                       </h4>
-                      <label className="flex items-center space-x-1.5 cursor-pointer">
+                      <label className="flex items-center space-x-1.5 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-neutral-200 shadow-2xs hover:bg-neutral-50 transition">
                         <input
                           type="checkbox"
                           checked={statementData.sectionI.H2_outerReceptacleSelected}
@@ -1271,6 +1526,172 @@ Licensed Funeral Director: Jason Benta, NYS Reg. #08850
                               onChange={(e) => {
                                 const updated = { ...statementData };
                                 updated.sectionI.H2_outerReceptacleAmount = parseFloat(e.target.value) || 0;
+                                setStatementData(calculateAP47Totals(updated));
+                              }}
+                              className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs font-mono font-bold text-[#991b1b]"
+                            />
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Urns & Keepsakes Selection Studio */}
+                  <div className="bg-neutral-50 p-5 rounded-2xl border border-neutral-200 space-y-4 text-xs">
+                    <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+                      <div className="flex items-center space-x-2">
+                        <Heart className="w-5 h-5 text-[#991b1b]" />
+                        <div>
+                          <h4 className="font-bold text-sm text-neutral-900 font-serif-title">
+                            Urn & Keepsake Merchandise (Batesville & Milso)
+                          </h4>
+                          <p className="text-[11px] text-neutral-500 font-normal">
+                            Cloisonne urns, cast bronze cubes, memory chimes, hardwood chests, tokens, and plaques.
+                          </p>
+                        </div>
+                      </div>
+                      <label className="flex items-center space-x-1.5 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-neutral-200 shadow-2xs hover:bg-neutral-50 transition">
+                        <input
+                          type="checkbox"
+                          checked={statementData.sectionI.H3_urnSelected}
+                          onChange={(e) => {
+                            const updated = { ...statementData };
+                            updated.sectionI.H3_urnSelected = e.target.checked;
+                            setStatementData(calculateAP47Totals(updated));
+                          }}
+                          className="rounded text-[#991b1b] focus:ring-[#991b1b]"
+                        />
+                        <span className="font-bold text-neutral-800">Include Urn in Contract</span>
+                      </label>
+                    </div>
+
+                    {statementData.sectionI.H3_urnSelected && (
+                      <div className="space-y-3 pt-1">
+                        
+                        <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-[11px] font-bold text-neutral-700">Select Urn / Keepsake Preset:</span>
+                            <div className="inline-flex rounded-lg border border-neutral-200 bg-neutral-100 p-0.5 text-[10px] font-medium">
+                              <button
+                                type="button"
+                                onClick={() => setUrnManufacturerFilter('all')}
+                                className={`px-2.5 py-0.5 rounded-md transition ${
+                                  urnManufacturerFilter === 'all'
+                                    ? 'bg-white text-neutral-900 font-bold shadow-2xs'
+                                    : 'text-neutral-600 hover:text-neutral-900'
+                                }`}
+                              >
+                                All
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setUrnManufacturerFilter('batesville')}
+                                className={`px-2.5 py-0.5 rounded-md transition ${
+                                  urnManufacturerFilter === 'batesville'
+                                    ? 'bg-[#991b1b] text-white font-bold shadow-2xs'
+                                    : 'text-neutral-600 hover:text-neutral-900'
+                                }`}
+                              >
+                                Batesville
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setUrnManufacturerFilter('milso')}
+                                className={`px-2.5 py-0.5 rounded-md transition ${
+                                  urnManufacturerFilter === 'milso'
+                                    ? 'bg-[#15803d] text-white font-bold shadow-2xs'
+                                    : 'text-neutral-600 hover:text-neutral-900'
+                                }`}
+                              >
+                                Milso
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <div className="sm:col-span-12">
+                              <input
+                                type="text"
+                                placeholder="Search urns, keepsakes, medallions, cloisonne..."
+                                value={urnSearchQuery}
+                                onChange={(e) => setUrnSearchQuery(e.target.value)}
+                                className="w-full p-2 bg-neutral-50 border border-neutral-300 rounded-lg text-xs placeholder:text-neutral-400"
+                              />
+                            </div>
+                          </div>
+
+                          {(() => {
+                            const urnItems = searchMerchandise(urnSearchQuery, urnManufacturerFilter, 'urn');
+                            return (
+                              <select
+                                value={selectedUrnCatalogId}
+                                onChange={(e) => {
+                                  const id = e.target.value;
+                                  setSelectedUrnCatalogId(id);
+                                  const found = ALL_UNIFIED_MERCHANDISE.find(m => m.id === id);
+                                  if (found) {
+                                    const updated = { ...statementData };
+                                    updated.sectionI.H3_urnSupplier = found.supplier;
+                                    updated.sectionI.H3_urnModelName = found.supplier === 'Batesville Casket Company'
+                                      ? `[#${found.modelCodeOrNumber}] ${found.nameOrDescription}`
+                                      : found.nameOrDescription;
+                                    updated.sectionI.H3_urnMaterial = found.material;
+                                    updated.sectionI.H3_urnAmount = found.price;
+                                    setStatementData(calculateAP47Totals(updated));
+                                    showToast(`Selected: ${found.displayText}`);
+                                  }
+                                }}
+                                className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs font-semibold text-neutral-900"
+                              >
+                                <option value="">-- Choose Urn / Keepsake ({urnItems.length} available) --</option>
+                                {urnItems.map((item) => (
+                                  <option key={item.id} value={item.id}>
+                                    {item.supplier === 'Milso Industry'
+                                      ? `[Milso] ${item.nameOrDescription} — $${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                                      : `[Batesville] [#${item.modelCodeOrNumber}] ${item.nameOrDescription} — $${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                                  </option>
+                                ))}
+                              </select>
+                            );
+                          })()}
+                        </div>
+
+                        <div className="pt-2 border-t border-neutral-200 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <div>
+                            <label className="text-[10px] text-neutral-500 block mb-1">Urn Supplier:</label>
+                            <input
+                              type="text"
+                              value={statementData.sectionI.H3_urnSupplier}
+                              onChange={(e) => {
+                                const updated = { ...statementData };
+                                updated.sectionI.H3_urnSupplier = e.target.value;
+                                setStatementData(updated);
+                              }}
+                              className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-neutral-500 block mb-1">Urn Model / Name:</label>
+                            <input
+                              type="text"
+                              value={statementData.sectionI.H3_urnModelName}
+                              onChange={(e) => {
+                                const updated = { ...statementData };
+                                updated.sectionI.H3_urnModelName = e.target.value;
+                                setStatementData(updated);
+                              }}
+                              className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs font-semibold"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-neutral-500 block mb-1">Urn Price ($):</label>
+                            <input
+                              type="number"
+                              value={statementData.sectionI.H3_urnAmount}
+                              onChange={(e) => {
+                                const updated = { ...statementData };
+                                updated.sectionI.H3_urnAmount = parseFloat(e.target.value) || 0;
                                 setStatementData(calculateAP47Totals(updated));
                               }}
                               className="w-full p-2 bg-white border border-neutral-300 rounded-lg text-xs font-mono font-bold text-[#991b1b]"
